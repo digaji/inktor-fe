@@ -6,5 +6,6 @@ export default {
       colors: { 'inktor-cyan': '#53a8b6' },
     },
   },
-  plugins: [],
+  // eslint-disable-next-line no-undef
+  plugins: [require('@headlessui/tailwindcss')],
 }
