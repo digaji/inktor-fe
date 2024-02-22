@@ -1,5 +1,5 @@
 import { FC, ReactNode, useState } from 'react'
-import '@/css/toolbar.css'
+import clsxm from '@/utils/clsxm'
 
 const PointerSVG = () => (
   <svg
@@ -36,39 +36,40 @@ const ResizeSVG = () => (
   </svg>
 )
 
-type ToolbarButtonProps = {
-  id: string
+interface ToolbarButton {
   content: ReactNode
   active?: boolean
   onClick?: () => void
 }
 
-const ToolbarButton: FC<ToolbarButtonProps> = (props) => {
+const ToolbarButton: FC<ToolbarButton> = ({ content, active, onClick }) => {
   return (
     <div
-      className={`toolbar-btn ${props.active && 'active'} ${props.id}`}
-      onClick={props.onClick}
+      className={clsxm(
+        'flex aspect-square w-full items-center justify-center rounded-md text-black transition-all duration-300 ease-in-out hover:cursor-pointer',
+        `${active && 'bg-inktor-cyan'}`
+      )}
+      onClick={onClick}
     >
-      {props.content}
+      {content}
     </div>
   )
 }
 
-type ToolbarProps = {
+interface Toolbar {
   setNormalMode?: () => void
   setResizeMode?: () => void
 }
 
-const Toolbar: FC<ToolbarProps> = (props) => {
+const Toolbar: FC<Toolbar> = (props) => {
   const [active, setActive] = useState('pointer')
   const doNothing = () => {}
   const setNormalMode = props.setNormalMode ?? doNothing
   const setResizeMode = props.setResizeMode ?? doNothing
 
   return (
-    <div className='toolbar'>
+    <div className='h-toolbar toolbar shadow-toolbar absolute left-3 flex w-12 flex-col gap-2 rounded-md bg-white p-2'>
       <ToolbarButton
-        id='pointer'
         content={<PointerSVG />}
         onClick={() => {
           setActive('pointer')
@@ -78,7 +79,6 @@ const Toolbar: FC<ToolbarProps> = (props) => {
       />
 
       <ToolbarButton
-        id='resize'
         content={<ResizeSVG />}
         onClick={() => {
           setActive('resize')
