@@ -64,6 +64,7 @@ const Toolbar: FC<ToolbarProps> = (props) => {
   const doNothing = () => {}
   const setNormalMode = props.setNormalMode ?? doNothing
   const setResizeMode = props.setResizeMode ?? doNothing
+
   return (
     <div className='toolbar'>
       <ToolbarButton
@@ -75,6 +76,7 @@ const Toolbar: FC<ToolbarProps> = (props) => {
         }}
         active={active === 'pointer'}
       />
+
       <ToolbarButton
         id='resize'
         content={<ResizeSVG />}

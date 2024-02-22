@@ -1,4 +1,4 @@
-import React, { InputHTMLAttributes, memo } from 'react'
+import React, { InputHTMLAttributes } from 'react'
 
 import clsxm from '@/utils/clsxm'
 
@@ -6,7 +6,6 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(({ ...rest }, ref) => {
   return (
-    // <div className='relative'>
     <input
       ref={ref}
       {...rest}
@@ -17,8 +16,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(({ ...rest }, ref) 
         rest.className
       )}
     />
-    // </div>
   )
 })
 
-export default memo(Input)
+export default Input
