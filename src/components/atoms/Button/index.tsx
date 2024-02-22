@@ -14,7 +14,7 @@ const Button: FC<ButtonProps> = ({ text, href, onClick, className, textClassName
   return (
     <div
       className={clsxm(
-        'relative flex justify-center rounded-lg border-2 border-black bg-white px-4 py-2 text-black',
+        'relative flex justify-center rounded-lg border-2 border-black bg-white px-4 py-2 text-black hover:cursor-pointer',
         className
       )}
       onClick={onClick}
