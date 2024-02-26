@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-const peerServer = "http://localhost:5000";
+const PEER_SERVER_HOST = import.meta.env.VITE_SIGNALING_SERVER_IP
+const PEER_SERVER_PORT = import.meta.env.VITE_SIGNALING_SERVER_PORT
+const peerServer = `http://${PEER_SERVER_HOST}:${PEER_SERVER_PORT}`
 
 export const joinRoom = async (peerId: string, roomId: string) => {
     const res = await fetch(`${peerServer}/join-room/${roomId}`, {

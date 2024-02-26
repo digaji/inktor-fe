@@ -5,6 +5,23 @@ import { z } from "zod";
 type MemberID = string;
 type ConnectionID = string;
 
+let peerClient: Peer | null = null
+
+const getPeerClient = () => {
+    if (!peerClient) {
+        const host = import.meta.env.VITE_SIGNALING_SERVER_IP
+        const port = import.meta.env.VITE_SIGNALING_SERVER_PORT
+        const path = import.meta.env.VITE_SIGNALING_SERVER_PEERJS_PATH
+        const key = import.meta.env.VITE_SIGNALING_SERVER_PEERJS_KEY
+        peerClient = new Peer({
+            host, port, path, key, config: {}
+        })
+        return peerClient
+    }
+    return peerClient
+
+}
+
 class PeerGroupClient {
 
     peerClient: Peer
@@ -22,15 +39,7 @@ class PeerGroupClient {
         this.pollRoomIntervalId = 0
 
         this.onMessageReceived = () => {}
-
-        this.peerClient = new Peer({
-            host: "localhost",
-            port: 5000,
-            path: "/peerjs/app",
-            key: "ps",
-            config: {}
-        })
-
+        this.peerClient = getPeerClient()
         this.peerClient.on("open", id => {
             this.peerClient.on("connection", conn => {
                 conn.on("data", (data) => {
