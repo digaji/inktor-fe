@@ -2,6 +2,8 @@ import { Vec2 } from '@/utils/Vec2'
 import { MouseContext, MouseWheel, MouseScroll } from '../Canvas/types'
 import Circle from '@/components/atoms/Circle'
 import Grid from '@/components/atoms/Grid'
+import { EngineContext, EngineState } from './type'
+import CrdtClient, { convertUtility } from '@/components/organisms/Crdt'
 
 class RenderingEngine {
   circles: Circle[]
@@ -14,11 +16,54 @@ class RenderingEngine {
   screenWidth: number
   screenHeight: number
   screenScale: number
+  state: EngineState
+  context: EngineContext
+  currentDraggingId: string | null
+  currentResizingId: string | null
+  currentDraggingData: {
+    lastMouseCanvasPos: Vec2,
+    lastObjectCanvasPos: Vec2
+  }
+
+  crdtClient: CrdtClient
+
+  static resizeHandleScreenSize: number = 5
 
   constructor() {
     this.screenWidth = 0
     this.screenHeight = 0
     this.screenScale = 1
+    this.currentDraggingId = null
+    this.currentResizingId = null
+    this.state = "NORMAL"
+    this.currentDraggingData = {
+      lastMouseCanvasPos: Vec2.zero(),
+      lastObjectCanvasPos: Vec2.zero()
+    }
+    this.context = {
+      getState: () => {
+        return this.state
+      },
+      getResizeHandleScreenRadius: () => RenderingEngine.resizeHandleScreenSize,
+      isDragging: (objectId: string) => this.currentDraggingId === objectId,
+      isResizing: (objectId: string) => this.currentResizingId === objectId,
+      getDraggingLastMousePos: () => this.currentDraggingData.lastMouseCanvasPos,
+      getDraggingLastObjectPos: () => this.currentDraggingData.lastObjectCanvasPos,
+      requestDragging: (objectId: string, objectCanvasPos: Vec2) => {
+        this.currentResizingId = null
+        this.currentDraggingId = objectId
+        this.currentDraggingData = {
+          lastMouseCanvasPos: this.screenToCanvas(this.currentMousePos),
+          lastObjectCanvasPos: objectCanvasPos
+        }
+        return true
+      },
+      requestResizing: (objectId: string) => {
+        this.currentResizingId = objectId
+        this.currentDraggingId = null
+        return true
+      },
+    }
 
     this.currentMousePos = Vec2.zero()
     this.lastMousePos = Vec2.zero()
@@ -27,11 +72,19 @@ class RenderingEngine {
 
     this.mouseDown = false
     this.grid = Grid(50, 10, 10)
-    this.circles = [
-      new Circle(500, 500),
-      // new Circle(0, 0),
-      new Circle(600, 600),
-    ]
+    this.circles = []
+
+    this.crdtClient = new CrdtClient()
+    this.crdtClient.setRender(() => {
+      const tree = this.crdtClient.children()
+      this.circles = convertUtility(tree, this.crdtClient, this.context)
+    })
+    const tree = this.crdtClient.children()
+    this.circles = convertUtility(tree, this.crdtClient, this.context)
+  }
+
+  setAddCircle() {
+    this.crdtClient.addCircle(undefined, { pos: { x: 0, y: 0 }, radius: 25 })
   }
 
   screenToCanvas(pos: Vec2) {
@@ -89,6 +142,8 @@ class RenderingEngine {
 
   onMouseUp() {
     this.mouseDown = false
+    this.currentDraggingId = null
+    this.currentResizingId = null
 
     for (const circle of this.circles) {
       circle.onMouseUp()
@@ -96,15 +151,11 @@ class RenderingEngine {
   }
 
   setNormalMode() {
-    this.circles.forEach((circle) => {
-      circle.state = 'NORMAL'
-    })
+    this.state = "NORMAL"
   }
 
   setResizeMode() {
-    this.circles.forEach((circle) => {
-      circle.state = 'RESIZE'
-    })
+    this.state = "RESIZE"
   }
 
   renderSimple(ctx: CanvasRenderingContext2D) {
@@ -164,11 +215,11 @@ class RenderingEngine {
 
     renderSimple.circle({ x: pX, y: pY, r, fill: 'black' })
 
-    if (circle.state === 'RESIZE') {
+    if (this.state === 'RESIZE') {
       renderSimple.circle({
         x: pX + r,
         y: pY,
-        r: Circle.resizeHandleScreenSize,
+        r: RenderingEngine.resizeHandleScreenSize,
         fill: 'white',
         shadow: {
           color: 'black',

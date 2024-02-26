@@ -36,6 +36,13 @@ const ResizeSVG = () => (
   </svg>
 )
 
+const AddSVG = () => (
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <line fill="none" stroke="#000000" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" x1="12" x2="12" y1="20" y2="4" />
+    <line fill="none" stroke="#000000" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" x1="4" x2="20" y1="12" y2="12" />
+  </svg>
+)
+
 interface ToolbarButton {
   content: ReactNode
   active?: boolean
@@ -59,16 +66,22 @@ const ToolbarButton: FC<ToolbarButton> = ({ content, active, onClick }) => {
 interface Toolbar {
   setNormalMode?: () => void
   setResizeMode?: () => void
+  setAddCircle?: () => void
 }
 
 const Toolbar: FC<Toolbar> = (props) => {
   const [active, setActive] = useState('pointer')
-  const doNothing = () => {}
+  const doNothing = () => { }
   const setNormalMode = props.setNormalMode ?? doNothing
   const setResizeMode = props.setResizeMode ?? doNothing
+  const setAddCircle = props.setAddCircle ?? doNothing
 
   return (
     <div className='h-toolbar toolbar shadow-toolbar absolute left-3 flex w-12 flex-col gap-2 rounded-md bg-white p-2'>
+      <ToolbarButton
+        content={<AddSVG/>}
+        onClick={setAddCircle}
+      />
       <ToolbarButton
         content={<PointerSVG />}
         onClick={() => {

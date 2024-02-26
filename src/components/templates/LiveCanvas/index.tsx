@@ -6,8 +6,18 @@ import Toolbar from '@/components/particles/Toolbar'
 import RenderingEngine from '@/components/organisms/RenderingEngine'
 import Settings from '@/components/particles/Settings'
 
+let engine: RenderingEngine | null = null;
+
+const getRenderingEngine = () => {
+  if (engine === null) {
+    engine = new RenderingEngine()
+    return engine
+  }
+  return engine
+}
+
 const useRenderingEngine = () => {
-  const renderingEngine = useRef(new RenderingEngine())
+  const renderingEngine = useRef(getRenderingEngine())
 
   const onMouseMove = useCallback((ctx: MouseContext) => {
     renderingEngine.current.onMouseMove(ctx)
@@ -33,6 +43,10 @@ const useRenderingEngine = () => {
     renderingEngine.current.setNormalMode()
   }, [])
 
+  const setAddCircle = useCallback(() => {
+    renderingEngine.current.setAddCircle()
+  }, [])
+
   const draw: CanvasDraw = useCallback((ctx) => {
     renderingEngine.current.render(ctx)
   }, [])
@@ -45,17 +59,18 @@ const useRenderingEngine = () => {
     onMouseWheel,
     setResizeMode,
     setNormalMode,
+    setAddCircle
   }
 }
 
 function LiveCanvas() {
-  const { draw, onMouseMove, onMouseDown, onMouseUp, onMouseWheel, setResizeMode, setNormalMode } = useRenderingEngine()
+  const { draw, onMouseMove, onMouseDown, onMouseUp, onMouseWheel, setResizeMode, setNormalMode, setAddCircle } = useRenderingEngine()
 
   return (
     <>
       <Settings />
 
-      <Toolbar {...{ setNormalMode, setResizeMode }} />
+      <Toolbar {...{ setNormalMode, setResizeMode, setAddCircle }} />
 
       <Canvas
         draw={draw}
