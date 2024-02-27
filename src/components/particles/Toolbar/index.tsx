@@ -1,4 +1,4 @@
-import { FC, ReactNode, useState } from 'react'
+import { FC, ReactNode, RefObject, forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import clsxm from '@/utils/clsxm'
 
 const PointerSVG = () => (
@@ -43,17 +43,44 @@ const AddSVG = () => (
   </svg>
 )
 
+const CircleSVG = () => (
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path
+    d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+    stroke="#000000"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  />
+  </svg>
+)
+
+const RectSVG = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 -960 960 960" width="32">
+    <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0 0v-560 560Z"/>
+  </svg>
+)
+
+const PathSVG = () => (
+  <svg width="32px" height="32px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="none">
+    <path fill="#000000" fillRule="evenodd" 
+      d="M13 0a3 3 0 00-1.65 5.506 7.338 7.338 0 01-.78 1.493c-.22.32-.472.635-.8 1.025a1.509 1.509 0 00-.832.085 12.722 12.722 0 00-1.773-1.124c-.66-.34-1.366-.616-2.215-.871a1.5 1.5 0 10-2.708 1.204c-.9 1.935-1.236 3.607-1.409 5.838a1.5 1.5 0 101.497.095c.162-2.07.464-3.55 1.25-5.253.381-.02.725-.183.979-.435.763.23 1.367.471 1.919.756a11.13 11.13 0 011.536.973 1.5 1.5 0 102.899-.296c.348-.415.64-.779.894-1.148.375-.548.665-1.103.964-1.857A3 3 0 1013 0zm-1.5 3a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z"
+    clipRule="evenodd"/>
+  </svg>
+)
+
 interface ToolbarButton {
   content: ReactNode
   active?: boolean
   onClick?: () => void
 }
 
-const ToolbarButton: FC<ToolbarButton> = ({ content, active, onClick }) => {
+const ToolbarButton = forwardRef<HTMLDivElement, ToolbarButton>(({ content, active, onClick }, ref) => {
   return (
     <div
+      ref={ref}
       className={clsxm(
-        'flex aspect-square w-full items-center justify-center rounded-md text-black transition-all duration-300 ease-in-out hover:cursor-pointer',
+        'flex aspect-square w-full items-center justify-center rounded-md text-black transition-all duration-300 ease-in-out hover:cursor-pointer hover:bg-inktor-cyan *:w-6 *:h-6',
         `${active && 'bg-inktor-cyan'}`
       )}
       onClick={onClick}
@@ -61,45 +88,96 @@ const ToolbarButton: FC<ToolbarButton> = ({ content, active, onClick }) => {
       {content}
     </div>
   )
+})
+
+interface AddOptions {
+  addButtonRef: RefObject<HTMLDivElement>
+}
+
+const AddOptions: FC<AddOptions> = ({ addButtonRef }) => {
+  // If someone has a better way of implementing this please let me know xD
+  // - Bryn.
+  const [position, setPosition] = useState<{ x: number, y: number } | null>(null)
+  const resizeObserver = useRef(new ResizeObserver(() => {
+    if (!addButtonRef.current) return
+    const rect = addButtonRef.current.getBoundingClientRect()
+    setPosition({ y: rect.top, x: rect.right })
+  }))
+  const offsetX = 15;
+  const offsetY = -8;
+  useEffect(() => {
+    if (!addButtonRef.current) return
+    const rect = addButtonRef.current.getBoundingClientRect()
+    setPosition({ y: rect.top, x: rect.right })
+    const root = document.getElementById("root")
+    if (!root) return
+    resizeObserver.current.observe(root)
+  }, [])
+  return (
+    <>
+      {position && (
+        <div className="absolute z-10 flex h-12 w-32 gap-2 p-2 bg-white shadow-toolbar rounded-md" style={{ left: position.x + offsetX, top: position.y + offsetY }}>
+          <ToolbarButton
+            content={<CircleSVG />}
+          />
+          <ToolbarButton
+            content={<RectSVG />}
+          />
+          <ToolbarButton
+            content={<PathSVG />}
+          />
+        </div>
+      )}
+    </>
+  )
 }
 
 interface Toolbar {
   setNormalMode?: () => void
   setResizeMode?: () => void
-  setAddCircle?: () => void
+  onClickAdd?: () => void
+  showAddOptions?: boolean
 }
 
 const Toolbar: FC<Toolbar> = (props) => {
   const [active, setActive] = useState('pointer')
+  const addButtonRef = useRef<HTMLDivElement>(null)
   const doNothing = () => { }
   const setNormalMode = props.setNormalMode ?? doNothing
   const setResizeMode = props.setResizeMode ?? doNothing
-  const setAddCircle = props.setAddCircle ?? doNothing
+  const onClickAdd = props.onClickAdd ?? doNothing
+  const showAddOptions = props.showAddOptions ?? false
 
   return (
-    <div className='h-toolbar toolbar shadow-toolbar absolute left-3 flex w-12 flex-col gap-2 rounded-md bg-white p-2'>
-      <ToolbarButton
-        content={<AddSVG/>}
-        onClick={setAddCircle}
-      />
-      <ToolbarButton
-        content={<PointerSVG />}
-        onClick={() => {
-          setActive('pointer')
-          setNormalMode()
-        }}
-        active={active === 'pointer'}
-      />
+    <>
+      {
+        showAddOptions && <AddOptions addButtonRef={addButtonRef} />
+      }
+      <div className='h-toolbar toolbar shadow-toolbar absolute left-3 flex w-12 flex-col gap-2 rounded-md bg-white p-2'>
+        <ToolbarButton
+          content={<AddSVG />}
+          onClick={onClickAdd}
+          ref={addButtonRef}
+        />
+        <ToolbarButton
+          content={<PointerSVG />}
+          onClick={() => {
+            setActive('pointer')
+            setNormalMode()
+          }}
+          active={active === 'pointer'}
+        />
 
-      <ToolbarButton
-        content={<ResizeSVG />}
-        onClick={() => {
-          setActive('resize')
-          setResizeMode()
-        }}
-        active={active === 'resize'}
-      />
-    </div>
+        <ToolbarButton
+          content={<ResizeSVG />}
+          onClick={() => {
+            setActive('resize')
+            setResizeMode()
+          }}
+          active={active === 'resize'}
+        />
+      </div>
+    </>
   )
 }
 

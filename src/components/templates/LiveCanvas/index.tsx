@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import Canvas from '@/components/organisms/Canvas'
 import { CanvasDraw, MouseContext, MouseWheel } from '@/components/organisms/Canvas/types'
 import '@/css/canvas.css'
@@ -65,17 +65,27 @@ const useRenderingEngine = () => {
 
 function LiveCanvas() {
   const { draw, onMouseMove, onMouseDown, onMouseUp, onMouseWheel, setResizeMode, setNormalMode, setAddCircle } = useRenderingEngine()
+  const [showAddOptions, setShowAddOption] = useState(false);
+
+  const onClickAdd = useCallback(() => {
+    setShowAddOption(prev => !prev)
+  }, [setShowAddOption]);
+
+  const onMouseDownExtra = useCallback((ctx: MouseContext) => {
+    setShowAddOption(false)
+    onMouseDown(ctx)
+  }, [])
 
   return (
     <>
       <Settings />
 
-      <Toolbar {...{ setNormalMode, setResizeMode, setAddCircle }} />
+      <Toolbar {...{ setNormalMode, setResizeMode, onClickAdd, showAddOptions }} />
 
       <Canvas
         draw={draw}
         onMouseMove={onMouseMove}
-        onMouseDown={onMouseDown}
+        onMouseDown={onMouseDownExtra}
         onMouseUp={onMouseUp}
         onMouseWheel={onMouseWheel}
       />
