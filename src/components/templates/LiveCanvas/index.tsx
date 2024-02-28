@@ -47,6 +47,10 @@ const useRenderingEngine = () => {
     renderingEngine.current.setAddCircle()
   }, [])
 
+  const setAddRectangle = useCallback(() => {
+    renderingEngine.current.setAddRectangle()
+  }, [])
+
   const draw: CanvasDraw = useCallback((ctx) => {
     renderingEngine.current.render(ctx)
   }, [])
@@ -59,12 +63,22 @@ const useRenderingEngine = () => {
     onMouseWheel,
     setResizeMode,
     setNormalMode,
-    setAddCircle
+    setAddCircle,
+    setAddRectangle
   }
 }
 
 function LiveCanvas() {
-  const { draw, onMouseMove, onMouseDown, onMouseUp, onMouseWheel, setResizeMode, setNormalMode, setAddCircle } = useRenderingEngine()
+  const { 
+    draw, 
+    onMouseMove, 
+    onMouseDown, 
+    onMouseUp, 
+    onMouseWheel, 
+    setResizeMode, 
+    setNormalMode, 
+    ...other
+  } = useRenderingEngine()
   const [showAddOptions, setShowAddOption] = useState(false);
 
   const onClickAdd = useCallback(() => {
@@ -76,11 +90,28 @@ function LiveCanvas() {
     onMouseDown(ctx)
   }, [])
 
+  const setAddCircle = useCallback(() => {
+    setShowAddOption(false)
+    other.setAddCircle()
+  }, [])
+
+  const setAddRectangle = useCallback(() => {
+    setShowAddOption(false)
+    other.setAddRectangle()
+  }, [])
+
   return (
     <>
       <Settings />
 
-      <Toolbar {...{ setNormalMode, setResizeMode, onClickAdd, showAddOptions }} />
+      <Toolbar {...{
+        setNormalMode, 
+        setResizeMode, 
+        onClickAdd, 
+        showAddOptions, 
+        setAddCircle, 
+        setAddRectangle
+      }} />
 
       <Canvas
         draw={draw}

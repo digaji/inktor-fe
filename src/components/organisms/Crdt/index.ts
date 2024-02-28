@@ -1,8 +1,9 @@
-import { PartialSVGCircle, SVGCircle, SVGDoc, SVGDocTree } from "@inktor/inktor-crdt-rs";
+import { PartialSVGCircle, PartialSVGRectangle, SVGCircle, SVGDoc, SVGDocTree, SVGRectangle } from "@inktor/inktor-crdt-rs";
 import { getClientId, getCrdtData, saveCrdtData } from '@/utils/storage';
 import Circle from "@/components/atoms/Circle";
 import { EngineContext } from "../RenderingEngine/type";
 import PeerGroupClient from "@/webrtc";
+import Rectangle from "@/components/atoms/Rectangle";
 
 // What does the CRDT client do?
 //   When application first loads
@@ -90,9 +91,21 @@ class CrdtClient {
         this.svgDoc.edit_circle(circle_id, edits)
         this.changeListener()
     }
-//   get_rectangle(rectangle_id: string): SVGRectangle | undefined;
-//   add_rectangle(group_id: string | undefined, partial_rectangle: PartialSVGRectangle): void;
-//   edit_rectangle(rectangle_id: string, edits: PartialSVGRectangle): void;
+
+    getRectangle(rectangle_id: string): SVGRectangle | undefined {
+        return this.svgDoc.get_rectangle(rectangle_id)
+    }
+
+    addRectangle(group_id: string | undefined, partial_rectangle: PartialSVGRectangle): void {
+        this.svgDoc.add_rectangle(group_id, partial_rectangle)
+        this.changeListener()
+    }
+
+    editRectangle(rectangle_id: string, edits: PartialSVGRectangle): void {
+        this.svgDoc.edit_rectangle(rectangle_id, edits)
+        this.changeListener()
+    }
+
 //   get_path(path_id: string): SVGPath | undefined;
 //   add_path(group_id: string | undefined, partial_path: PartialSVGPath): void;
 //   edit_path(path_id: string, partial_path: PartialSVGPath): void;
@@ -113,10 +126,6 @@ class CrdtClient {
     children(): SVGDocTree {
         return this.svgDoc.children()
     }
-
-    testInitialCircles(): Circle[] {
-        return []
-    }
 }
 
 export const convertUtility = (
@@ -125,9 +134,12 @@ export const convertUtility = (
     engineContext: EngineContext
 ) => {
     const circles = tree.children
-        .flatMap(it => {
-            if (it.type !== "CIRCLE") return []
+        .flatMap((it): (Circle | Rectangle)[] => {
+            if (it.type === "CIRCLE")
             return [new Circle(it.id, it.pos.x, it.pos.y, it.radius, engineContext, crdtClient)]
+            if (it.type === "RECTANGLE")
+            return [new Rectangle(it.id, it.pos.x, it.pos.y, it.height, it.width, engineContext, crdtClient)]
+            return []
         });
     return circles
 }

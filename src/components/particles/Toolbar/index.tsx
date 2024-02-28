@@ -1,4 +1,4 @@
-import { FC, ReactNode, RefObject, forwardRef, useEffect, useMemo, useRef, useState } from 'react'
+import { FC, ReactNode, RefObject, forwardRef, useEffect, useRef, useState } from 'react'
 import clsxm from '@/utils/clsxm'
 
 const PointerSVG = () => (
@@ -91,10 +91,13 @@ const ToolbarButton = forwardRef<HTMLDivElement, ToolbarButton>(({ content, acti
 })
 
 interface AddOptions {
-  addButtonRef: RefObject<HTMLDivElement>
+  addButtonRef: RefObject<HTMLDivElement>,
+  setAddCircle?: () => void,
+  setAddRectangle?: () => void,
+  setAddPath?: () => void,
 }
 
-const AddOptions: FC<AddOptions> = ({ addButtonRef }) => {
+const AddOptions: FC<AddOptions> = ({ addButtonRef, ...props }) => {
   // If someone has a better way of implementing this please let me know xD
   // - Bryn.
   const [position, setPosition] = useState<{ x: number, y: number } | null>(null)
@@ -119,12 +122,15 @@ const AddOptions: FC<AddOptions> = ({ addButtonRef }) => {
         <div className="absolute z-10 flex h-12 w-32 gap-2 p-2 bg-white shadow-toolbar rounded-md" style={{ left: position.x + offsetX, top: position.y + offsetY }}>
           <ToolbarButton
             content={<CircleSVG />}
+            onClick={props.setAddCircle}
           />
           <ToolbarButton
             content={<RectSVG />}
+            onClick={props.setAddRectangle}
           />
           <ToolbarButton
             content={<PathSVG />}
+            onClick={props.setAddPath}
           />
         </div>
       )}
@@ -136,6 +142,9 @@ interface Toolbar {
   setNormalMode?: () => void
   setResizeMode?: () => void
   onClickAdd?: () => void
+  setAddCircle?: () => void
+  setAddRectangle?: () => void
+  setAddPath?: () => void
   showAddOptions?: boolean
 }
 
@@ -151,7 +160,12 @@ const Toolbar: FC<Toolbar> = (props) => {
   return (
     <>
       {
-        showAddOptions && <AddOptions addButtonRef={addButtonRef} />
+        showAddOptions && <AddOptions
+          addButtonRef={addButtonRef}
+          setAddCircle={props.setAddCircle}
+          setAddRectangle={props.setAddRectangle}
+          setAddPath={props.setAddPath}
+        />
       }
       <div className='h-toolbar toolbar shadow-toolbar absolute left-3 flex w-12 flex-col gap-2 rounded-md bg-white p-2'>
         <ToolbarButton

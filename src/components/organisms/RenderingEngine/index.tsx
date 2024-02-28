@@ -4,9 +4,10 @@ import Circle from '@/components/atoms/Circle'
 import Grid from '@/components/atoms/Grid'
 import { EngineContext, EngineState } from './type'
 import CrdtClient, { convertUtility } from '@/components/organisms/Crdt'
+import Rectangle from '@/components/atoms/Rectangle'
 
 class RenderingEngine {
-  circles: Circle[]
+  objects: (Circle | Rectangle)[]
   grid: Grid
   mouseDown: boolean
   lastMousePos: Vec2
@@ -72,19 +73,23 @@ class RenderingEngine {
 
     this.mouseDown = false
     this.grid = Grid(50, 10, 10)
-    this.circles = []
+    this.objects = []
 
     this.crdtClient = new CrdtClient()
     this.crdtClient.setRender(() => {
       const tree = this.crdtClient.children()
-      this.circles = convertUtility(tree, this.crdtClient, this.context)
+      this.objects = convertUtility(tree, this.crdtClient, this.context)
     })
     const tree = this.crdtClient.children()
-    this.circles = convertUtility(tree, this.crdtClient, this.context)
+    this.objects = convertUtility(tree, this.crdtClient, this.context)
   }
 
   setAddCircle() {
     this.crdtClient.addCircle(undefined, { pos: { x: 0, y: 0 }, radius: 25 })
+  }
+
+  setAddRectangle() {
+    this.crdtClient.addRectangle(undefined, { pos: { x: 0, y: 0 }, height: 100, width: 150 })
   }
 
   screenToCanvas(pos: Vec2) {
@@ -102,9 +107,9 @@ class RenderingEngine {
 
     const mousePos = this.screenToCanvas(ctx.pos)
 
-    this.circles.forEach((circle) => {
-      if (!(circle.canDrag(mousePos) || circle.canResize(mousePos))) return
-      circle.onMouseDown(mousePos)
+    this.objects.forEach((object) => {
+      if (!(object.canDrag(mousePos) || object.canResize(mousePos))) return
+      object.onMouseDown(mousePos)
     })
   }
 
@@ -129,8 +134,8 @@ class RenderingEngine {
     this.currentMousePos = ctx.pos.copy()
     const mousePos = this.screenToCanvas(ctx.pos)
 
-    for (const circle of this.circles) {
-      const moving = circle.onMouseMove(mousePos)
+    for (const object of this.objects) {
+      const moving = object.onMouseMove(mousePos)
       if (moving) return
     }
 
@@ -145,8 +150,8 @@ class RenderingEngine {
     this.currentDraggingId = null
     this.currentResizingId = null
 
-    for (const circle of this.circles) {
-      circle.onMouseUp()
+    for (const object of this.objects) {
+      object.onMouseUp()
     }
   }
 
@@ -201,8 +206,63 @@ class RenderingEngine {
       }
     }
 
+    const renderRectangle = (data: {
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      fill?: string,
+      stroke?: {
+        color: string,
+        width: number
+      }
+    }) => {
+      const stroke = data.stroke
+      if (stroke) {
+        ctx.strokeStyle = stroke.color
+        ctx.lineWidth = stroke.width
+      }
+
+      ctx.fillStyle = data.fill ?? "black"
+      ctx.beginPath()
+      ctx.rect(data.x, data.y, data.width, data.height)
+      ctx.fill()
+      if (stroke) {
+        ctx.stroke()
+      }
+    }
+
     return {
       circle: renderCircle,
+      rectangle: renderRectangle
+    }
+  }
+
+  renderRectangle(rectangle: Rectangle, ctx: CanvasRenderingContext2D) {
+    const renderSimple = this.renderSimple(ctx)
+    const screenPos = this.canvasToScreen(rectangle.pos)
+    const pX = screenPos.x()
+    const pY = screenPos.y()
+    const height = rectangle.height * this.screenScale
+    const width = rectangle.width * this.screenScale
+
+    renderSimple.rectangle({ x: pX, y: pY, height, width, fill: "black" })
+
+    if (this.state === "RESIZE") {
+      renderSimple.circle({
+        x: pX + width,
+        y: pY + height,
+        r: RenderingEngine.resizeHandleScreenSize,
+        fill: 'white',
+        shadow: {
+          color: 'black',
+          blur: 5
+        },
+        stroke: {
+          color: '#0c8ce9',
+          width: 1.5
+        }
+      })
     }
   }
 
@@ -299,7 +359,10 @@ class RenderingEngine {
       ctx.canvas.style.cursor = 'initial'
     }
 
-    const canResize = this.circles.some((c) => c.canResize(this.screenToCanvas(this.currentMousePos)))
+    const canResize = this.objects.some((o) => {
+      o.canResize(this.screenToCanvas(this.currentMousePos))
+    })
+
     if (canResize) {
       ctx.canvas.style.cursor = 'ew-resize'
     }
@@ -307,8 +370,13 @@ class RenderingEngine {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
     this.renderGrid(this.grid, ctx)
 
-    for (let i = this.circles.length - 1; i >= 0; i--) {
-      this.renderCircle(this.circles[i], ctx)
+    for (let i = this.objects.length - 1; i >= 0; i--) {
+      const object = this.objects[i]
+      if (object instanceof Circle) {
+        this.renderCircle(object, ctx)
+      }  else if (object instanceof Rectangle) {
+        this.renderRectangle(object, ctx)
+      }
     }
   }
 }
