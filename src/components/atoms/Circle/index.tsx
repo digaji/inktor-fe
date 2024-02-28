@@ -1,27 +1,27 @@
+import CrdtClient from '@/components/organisms/Crdt'
+import { EngineContext } from '@/components/organisms/RenderingEngine/type'
 import { Vec2 } from '@/utils/Vec2'
 
 class Circle {
-  pos: Vec2
-  reg: {
-    prevMousePos: Vec2
-    prevPos: Vec2
-  }
-  state: 'RESIZE' | 'NORMAL'
-  static resizeHandleScreenSize: number = 5
-  radius: number
-  dragging: boolean
-  resizing: boolean
+  readonly id: string
+  readonly pos: Vec2
+  readonly radius: number
+  engineContext: EngineContext
+  crdtClient: CrdtClient
 
-  constructor(x: number = 0, y: number = 0) {
+  constructor(
+    id: string,
+    x: number, 
+    y: number,
+    radius: number,
+    engineContext: EngineContext,
+    crdtClient: CrdtClient
+  ) {
+    this.id = id
     this.pos = Vec2.new(x, y)
-    this.state = 'NORMAL'
-    this.reg = {
-      prevMousePos: Vec2.new(0, 0),
-      prevPos: Vec2.new(x, y),
-    }
-    this.radius = 25
-    this.dragging = false
-    this.resizing = false
+    this.engineContext = engineContext
+    this.radius = radius
+    this.crdtClient = crdtClient
   }
 
   canDrag(mousePos: Vec2) {
@@ -30,34 +30,43 @@ class Circle {
 
   canResize(mousePos: Vec2) {
     const resizeHandlePos = this.pos.add(Vec2.new(this.radius, 0))
-    const closeEnough = mousePos.dist(resizeHandlePos) <= Circle.resizeHandleScreenSize
-    const isModeResize = this.state === 'RESIZE'
+    const closeEnough = mousePos.dist(resizeHandlePos) <= this.engineContext.getResizeHandleScreenRadius()
+    const isModeResize = this.engineContext.getState() === 'RESIZE'
 
     return closeEnough && isModeResize
   }
 
   onMouseDown(mousePos: Vec2) {
-    if (this.canResize(mousePos)) {
-      this.resizing = true
+    if (
+      this.canResize(mousePos)
+      && this.engineContext.requestResizing(this.id)
+    ) {
       return
     }
 
-    if (this.canDrag(mousePos)) {
-      this.dragging = true
-      this.reg.prevMousePos = mousePos.copy()
-      this.reg.prevPos = this.pos.copy()
+    if (
+      this.canDrag(mousePos)
+      && this.engineContext.requestDragging(this.id, this.pos)
+    ) {
+      return
     }
   }
 
   onMouseMove(mousePos: Vec2) {
-    if (this.resizing) {
-      const newRad = mousePos.sub(this.pos).mag()
-      this.radius = newRad
+    if (this.engineContext.isResizing(this.id)) {
+      const newRad = Math.floor(mousePos.sub(this.pos).mag())
+      // this.radius = newRad
+      this.crdtClient.editCircle(this.id, { radius: newRad })
       return true
     }
 
-    if (this.dragging) {
-      this.pos = mousePos.sub(this.reg.prevMousePos).add(this.reg.prevPos)
+    if (this.engineContext.isDragging(this.id)) {
+      const prevMousePos = this.engineContext.getDraggingLastMousePos()
+      const prevPos = this.engineContext.getDraggingLastObjectPos()
+      const pos = mousePos.sub(prevMousePos).add(prevPos)
+      const x = Math.floor(pos.x())
+      const y = Math.floor(pos.y())
+      this.crdtClient.editCircle(this.id, { pos: { x, y }})
       return true
     }
 
@@ -65,8 +74,6 @@ class Circle {
   }
 
   onMouseUp() {
-    this.dragging = false
-    this.resizing = false
   }
 }
 
