@@ -1,9 +1,12 @@
-import { PartialSVGCircle, PartialSVGRectangle, SVGCircle, SVGDoc, SVGDocTree, SVGRectangle } from "@inktor/inktor-crdt-rs";
-import { getClientId, getCrdtData, saveCrdtData } from '@/utils/storage';
+import { PartialSVGCircle, PartialSVGPath, PartialSVGRectangle, SVGCircle, SVGDoc, SVGDocTree, SVGPath, SVGPathCommand, SVGPathCommandType, SVGRectangle, Vec2 } from "@inktor/inktor-crdt-rs";
+
 import Circle from "@/components/atoms/Circle";
-import { EngineContext } from "../RenderingEngine/type";
-import PeerGroupClient from "@/webrtc";
+import Path from "@/components/atoms/Path";
 import Rectangle from "@/components/atoms/Rectangle";
+import { getClientId, getCrdtData, saveCrdtData } from '@/utils/storage';
+import PeerGroupClient from "@/webrtc";
+
+import { EngineContext } from "../RenderingEngine/type";
 
 // What does the CRDT client do?
 //   When application first loads
@@ -19,6 +22,8 @@ import Rectangle from "@/components/atoms/Rectangle";
 //     - Apply change to CRDT.
 //     - Save new state to local storage.
 //     - Re render the current canvas.
+
+export type PathCommand = SVGPathCommand;
 
 class CrdtClient {
 
@@ -106,15 +111,47 @@ class CrdtClient {
         this.changeListener()
     }
 
-//   get_path(path_id: string): SVGPath | undefined;
-//   add_path(group_id: string | undefined, partial_path: PartialSVGPath): void;
-//   edit_path(path_id: string, partial_path: PartialSVGPath): void;
+    getPath(path_id: string): SVGPath | undefined {
+        return this.svgDoc.get_path(path_id)
+    }
+
+    addPath(group_id: string | undefined, partial_path: PartialSVGPath): void {
+        this.svgDoc.add_path(group_id, partial_path)
+        this.changeListener()
+    }
+
+    editPath(path_id: string, partial_path: PartialSVGPath): void {
+        this.svgDoc.edit_path(path_id, partial_path)
+        this.changeListener()
+    }
+
 //   edit_group(group_id: string, partial_group: PartialSVGGroup): void;
-//   edit_path_point_type(path_id: string, point_id: string, command_type: SVGPathCommandType): void;
-//   edit_path_point_pos(path_id: string, point_id: string, new_pos: Vec2): void;
-//   edit_path_point_handle1(path_id: string, point_id: string, new_handle1: Vec2): void;
-//   edit_path_point_handle2(path_id: string, point_id: string, new_handle2: Vec2): void;
-//   add_point_to_path(path_id: string, command: SVGPathCommandType, pos: Vec2): void;
+
+    editPathPointType(path_id: string, point_id: string, command_type: SVGPathCommandType): void {
+        this.svgDoc.edit_path_point_type(path_id, point_id, command_type)
+        this.changeListener()
+    }
+
+    editPathPointPos(path_id: string, point_id: string, new_pos: Vec2): void {
+        this.svgDoc.edit_path_point_pos(path_id, point_id, new_pos)
+        this.changeListener()        
+    }
+
+    editPathPointHandle1(path_id: string, point_id: string, new_handle1: Vec2): void {
+        this.svgDoc.edit_path_point_handle1(path_id, point_id, new_handle1)
+        this.changeListener()
+    }
+
+    editPathPointHandle2(path_id: string, point_id: string, new_handle2: Vec2): void {
+        this.svgDoc.edit_path_point_handle2(path_id, point_id, new_handle2)
+        this.changeListener()
+    }
+
+    addPointToPath(path_id: string, command: SVGPathCommandType, pos: Vec2): void {
+        this.svgDoc.add_point_to_path(path_id, command, pos)
+        this.changeListener()
+    }
+
 //   move_object_to_group(object_id: string, group_id: string, index: number): void;
 //   move_object_to_root(object_id: string, index: number): void;
 //   remove_object(object_id: string): void;
@@ -134,11 +171,13 @@ export const convertUtility = (
     engineContext: EngineContext
 ) => {
     const circles = tree.children
-        .flatMap((it): (Circle | Rectangle)[] => {
+        .flatMap((it): (Circle | Rectangle | Path)[] => {
             if (it.type === "CIRCLE")
             return [new Circle(it.id, it.pos.x, it.pos.y, it.radius, engineContext, crdtClient)]
             if (it.type === "RECTANGLE")
             return [new Rectangle(it.id, it.pos.x, it.pos.y, it.height, it.width, engineContext, crdtClient)]
+            if (it.type === "PATH")
+            return [new Path(it.id, it.points, engineContext, crdtClient)]
             return []
         });
     return circles

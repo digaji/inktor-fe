@@ -1,13 +1,15 @@
-import { Vec2 } from '@/utils/Vec2'
-import { MouseContext, MouseWheel, MouseScroll } from '../Canvas/types'
 import Circle from '@/components/atoms/Circle'
 import Grid from '@/components/atoms/Grid'
-import { EngineContext, EngineState } from './type'
-import CrdtClient, { convertUtility } from '@/components/organisms/Crdt'
+import Path from '@/components/atoms/Path'
 import Rectangle from '@/components/atoms/Rectangle'
+import CrdtClient, { convertUtility,PathCommand } from '@/components/organisms/Crdt'
+import { Vec2 } from '@/utils/Vec2'
+
+import { MouseContext, MouseScroll,MouseWheel } from '../Canvas/types'
+import { EngineContext, EngineState } from './type'
 
 class RenderingEngine {
-  objects: (Circle | Rectangle)[]
+  objects: (Circle | Rectangle | Path)[]
   grid: Grid
   mouseDown: boolean
   lastMousePos: Vec2
@@ -28,7 +30,7 @@ class RenderingEngine {
 
   crdtClient: CrdtClient
 
-  static resizeHandleScreenSize: number = 5
+  static resizeHandleScreenSize: number = 6
 
   constructor() {
     this.screenWidth = 0
@@ -90,6 +92,26 @@ class RenderingEngine {
 
   setAddRectangle() {
     this.crdtClient.addRectangle(undefined, { pos: { x: 0, y: 0 }, height: 100, width: 150 })
+  }
+
+  setAddPath() {
+    this.crdtClient.addPath(undefined, { points: [ 
+      { type: "START", pos: { x: 0, y: 0 } },
+      { type: "BEZIER",
+        pos: { x: 50, y: 50 },
+        handle1: { x: 50, y: 0},
+        handle2: { x: 0, y: 50 }
+      },
+      { type: "BEZIER",
+        pos: { x: 50, y: 50 },
+        handle1: { x: 50, y: 0},
+        handle2: { x: 0, y: 50 }
+      },
+      {
+        type: "BEZIER_QUAD",
+        pos: { x: 50, y: 50 }
+      }
+    ]})
   }
 
   screenToCanvas(pos: Vec2) {
@@ -232,9 +254,193 @@ class RenderingEngine {
       }
     }
 
+    const renderPath = (data: {
+      fill?: string,
+      stroke?: {
+        color: string,
+        width: number
+      },
+      points: PathCommand[]
+    }) => {
+      const stroke = data.stroke
+      if (stroke) {
+        ctx.strokeStyle = stroke.color
+        ctx.lineWidth = stroke.width
+      }
+
+      ctx.fillStyle = data.fill ?? "black"
+      ctx.beginPath()
+      let isClosed = false
+      let prevPos: Vec2 | null = null
+      for (const point of data.points) {
+        if (point.type === "START") {
+          const pos = Vec2.new(point.pos.x, point.pos.y)
+          const screenPos = this.canvasToScreen(pos)
+          ctx.moveTo(screenPos.x(), screenPos.y())
+          prevPos = pos
+        } else if (point.type === "LINE") {
+          const pos = Vec2.new(point.pos.x, point.pos.y)
+          const screenPos = this.canvasToScreen(pos)
+          ctx.lineTo(screenPos.x(), screenPos.y())
+          prevPos = pos
+        } else if (point.type === "BEZIER") {
+          if (prevPos === null) continue
+          const pos = Vec2.new(point.pos.x, point.pos.y)
+          const screenPos = this.canvasToScreen(pos)
+          const handle1 = Vec2.new(point.handle1.x, point.handle1.y).add(prevPos)
+          const screenHandle1 = this.canvasToScreen(handle1)
+          const handle2 = Vec2.new(point.handle2.x, point.handle2.y).add(pos)
+          const screenHandle2 = this.canvasToScreen(handle2)
+          ctx.bezierCurveTo(
+            screenHandle1.x(), 
+            screenHandle1.y(), 
+            screenHandle2.x(),
+            screenHandle2.y(),
+            screenPos.x(),
+            screenPos.y()
+          )
+          prevPos = pos
+        } else if (point.type === "BEZIER_QUAD") {
+          if (prevPos === null) continue
+          const pos = Vec2.new(point.pos.x, point.pos.y)
+          const screenPos = this.canvasToScreen(pos)
+          const handle = Vec2.new(point.handle.x, point.handle.y).add(prevPos)
+          const screenHandle = this.canvasToScreen(handle)
+          ctx.bezierCurveTo(
+            screenHandle.x(),
+            screenHandle.y(),
+            screenHandle.x(),
+            screenHandle.y(),
+            screenPos.x(),
+            screenPos.y()
+          )
+          prevPos = pos
+        } else if (point.type === "CLOSE") {
+          isClosed = true
+          break
+        }
+      }
+      if (isClosed) {
+        ctx.fill()
+      } else {
+        ctx.stroke()
+      }
+    }
+
+    const renderHandle = ({ x, y }: { x: number, y: number }) => {
+      renderCircle({
+        x: x,
+        y: y,
+        r: RenderingEngine.resizeHandleScreenSize,
+        fill: 'white',
+        shadow: {
+          color: 'black',
+          blur: 5
+        },
+        stroke: {
+          color: '#0c8ce9',
+          width: 1.5
+        }
+      })
+    }
+
+    const renderLine = ({ x1, y1, x2, y2 }: { x1: number, y1: number, x2: number, y2: number }) => {
+      ctx.lineWidth = 0.5
+      ctx.beginPath()
+      ctx.moveTo(x1, y1)
+      ctx.lineTo(x2, y2)
+      ctx.stroke()
+    }
+
     return {
       circle: renderCircle,
-      rectangle: renderRectangle
+      rectangle: renderRectangle,
+      path: renderPath,
+      handle: renderHandle,
+      line: renderLine
+    }
+  }
+
+
+  renderPath(path: Path, ctx: CanvasRenderingContext2D) {
+    const renderSimple = this.renderSimple(ctx)
+    const points = path.points
+    renderSimple.path({ points, stroke: { color: "black", width: 2 } })
+    if (this.state !== "RESIZE") return
+    // Rendering handles
+    let prevPos: Vec2 | null = null
+    ctx.strokeStyle = '#0c8ce9'
+    ctx.lineWidth = 1.5
+    for (const point of points) {
+      if (point.type === "CLOSE") continue
+      const pos = Vec2.new(point.pos.x, point.pos.y)
+      const screenPos = this.canvasToScreen(pos)
+      if (point.type === "BEZIER") {
+        if (prevPos !== null) {
+          const handle1 = Vec2.new(point.handle1.x, point.handle1.y)
+            .add(prevPos)
+          const handle1ScreenPos = this.canvasToScreen(handle1)
+          const prevScreenPos = this.canvasToScreen(prevPos)
+          renderSimple.line({ 
+            x1: prevScreenPos.x(), 
+            y1: prevScreenPos.y(), 
+            x2: handle1ScreenPos.x(),
+            y2: handle1ScreenPos.y()
+          })
+        }
+        const handle2 = Vec2.new(point.handle2.x, point.handle2.y).add(pos)
+        const handle2ScreenPos = this.canvasToScreen(handle2)
+        renderSimple.line({ 
+          x1: screenPos.x(), 
+          y1: screenPos.y(),
+          x2: handle2ScreenPos.x(),
+          y2: handle2ScreenPos.y()
+        })
+      }
+      if (point.type === "BEZIER_QUAD") {
+        if (prevPos === null) continue
+        const prevScreenPos = this.canvasToScreen(prevPos)
+        const handle = Vec2.new(point.handle.x, point.handle.y).add(prevPos)
+        const handleScreenPos = this.canvasToScreen(handle)
+        renderSimple.line({ 
+          x1: prevScreenPos.x(), 
+          y1: prevScreenPos.y(),
+          x2: handleScreenPos.x(),
+          y2: handleScreenPos.y()
+        })
+        renderSimple.line({
+          x1: screenPos.x(),
+          y1: screenPos.y(),
+          x2: handleScreenPos.x(),
+          y2: handleScreenPos.y()
+        })
+      }
+      prevPos = pos
+    }
+    prevPos = null
+    for (const point of points) {
+      if (point.type === "CLOSE") continue
+      const pos = Vec2.new(point.pos.x, point.pos.y)
+      const screenPos = this.canvasToScreen(pos)
+      renderSimple.handle({ x: screenPos.x(), y: screenPos.y()})
+      if (point.type === "BEZIER") {
+        if (prevPos !== null) {
+          const handle1 = Vec2.new(point.handle1.x, point.handle1.y)
+            .add(prevPos)
+          const handle1ScreenPos = this.canvasToScreen(handle1)
+          renderSimple.handle({ x: handle1ScreenPos.x(), y: handle1ScreenPos.y() })
+        }
+        const handle2 = Vec2.new(point.handle2.x, point.handle2.y).add(pos)
+        const handle2ScreenPos = this.canvasToScreen(handle2)
+        renderSimple.handle({ x: handle2ScreenPos.x(), y: handle2ScreenPos.y() })
+      }
+      if (point.type === "BEZIER_QUAD") {
+        if (prevPos === null) continue
+        const handle = Vec2.new(point.handle.x, point.handle.y).add(prevPos)
+        const handleScreenPos = this.canvasToScreen(handle)
+        renderSimple.handle({ x: handleScreenPos.x(), y: handleScreenPos.y() })
+      }
+      prevPos = pos
     }
   }
 
@@ -353,10 +559,14 @@ class RenderingEngine {
     this.screenHeight = ctx.canvas.height
     this.screenWidth = ctx.canvas.width
 
+    const canDrag = this.objects.some(o => o.canDrag(this.screenToCanvas(this.currentMousePos)))
+    ctx.canvas.style.cursor = "initial"
+    if (canDrag) {
+      ctx.canvas.style.cursor = "grab"
+    }
+
     if (this.mouseDown) {
       ctx.canvas.style.cursor = 'grabbing'
-    } else {
-      ctx.canvas.style.cursor = 'initial'
     }
 
     const canResize = this.objects.some((o) => {
@@ -367,6 +577,7 @@ class RenderingEngine {
       ctx.canvas.style.cursor = 'ew-resize'
     }
 
+
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
     this.renderGrid(this.grid, ctx)
 
@@ -376,6 +587,8 @@ class RenderingEngine {
         this.renderCircle(object, ctx)
       }  else if (object instanceof Rectangle) {
         this.renderRectangle(object, ctx)
+      } else if (object instanceof Path) {
+        this.renderPath(object, ctx)
       }
     }
   }

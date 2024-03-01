@@ -51,6 +51,10 @@ const useRenderingEngine = () => {
     renderingEngine.current.setAddRectangle()
   }, [])
 
+  const setAddPath = useCallback(() => {
+    renderingEngine.current.setAddPath()
+  }, [])
+
   const draw: CanvasDraw = useCallback((ctx) => {
     renderingEngine.current.render(ctx)
   }, [])
@@ -64,7 +68,8 @@ const useRenderingEngine = () => {
     setResizeMode,
     setNormalMode,
     setAddCircle,
-    setAddRectangle
+    setAddRectangle,
+    setAddPath
   }
 }
 
@@ -100,6 +105,11 @@ function LiveCanvas() {
     other.setAddRectangle()
   }, [])
 
+  const setAddPath = useCallback(() => {
+    setShowAddOption(false)
+    other.setAddPath()
+  }, [])
+
   return (
     <>
       <Settings />
@@ -110,7 +120,8 @@ function LiveCanvas() {
         onClickAdd, 
         showAddOptions, 
         setAddCircle, 
-        setAddRectangle
+        setAddRectangle,
+        setAddPath
       }} />
 
       <Canvas
