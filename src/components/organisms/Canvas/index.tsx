@@ -1,6 +1,8 @@
-import { MutableRefObject, useRef, useEffect, FC, MouseEvent, MouseEventHandler } from 'react'
-import { CanvasDraw, CanvasProps, MouseButton, MouseContext, MouseScroll } from './types'
+import { FC, MouseEvent, MouseEventHandler, MutableRefObject, useEffect, useRef } from 'react'
+
 import { Vec2 } from '@/utils/Vec2'
+
+import { CanvasDraw, CanvasProps, MouseButton, MouseContext, MouseScroll } from './types'
 
 function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
   const { width, height } = canvas.getBoundingClientRect()
@@ -115,6 +117,7 @@ const Canvas: FC<CanvasProps> = (props) => {
       onMouseUp={mouseUpHandler}
       onMouseMove={mouseMoveHandler}
       ref={canvasRef}
+      className='block h-screen w-screen'
     />
   )
 }
