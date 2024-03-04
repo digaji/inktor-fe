@@ -1,6 +1,4 @@
-import { Color } from '@inktor/inktor-crdt-rs'
-
-import CrdtClient from '@/components/organisms/Crdt'
+import CrdtClient, { SVGColor } from '@/components/organisms/Crdt'
 import { EngineContext } from '@/components/organisms/RenderingEngine/type'
 import { Vec2 } from '@/utils/Vec2'
 
@@ -10,8 +8,8 @@ class Circle {
   readonly radius: number
   readonly stroke_width: number
   readonly opacity: number
-  readonly fill: Color
-  readonly stroke: Color
+  readonly fill: SVGColor
+  readonly stroke: SVGColor
   engineContext: EngineContext
   crdtClient: CrdtClient
 
@@ -22,8 +20,8 @@ class Circle {
     radius: number,
     stroke_width: number,
     opacity: number,
-    fill: Color,
-    stroke: Color,
+    fill: SVGColor,
+    stroke: SVGColor,
     engineContext: EngineContext,
     crdtClient: CrdtClient
   ) {
