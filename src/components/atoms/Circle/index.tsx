@@ -1,3 +1,5 @@
+import { Color } from '@inktor/inktor-crdt-rs'
+
 import CrdtClient from '@/components/organisms/Crdt'
 import { EngineContext } from '@/components/organisms/RenderingEngine/type'
 import { Vec2 } from '@/utils/Vec2'
@@ -6,21 +8,34 @@ class Circle {
   readonly id: string
   readonly pos: Vec2
   readonly radius: number
+  readonly stroke_width: number
+  readonly opacity: number
+  readonly fill: Color
+  readonly stroke: Color
   engineContext: EngineContext
   crdtClient: CrdtClient
 
   constructor(
     id: string,
-    x: number, 
+    x: number,
     y: number,
     radius: number,
+    stroke_width: number,
+    opacity: number,
+    fill: Color,
+    stroke: Color,
     engineContext: EngineContext,
     crdtClient: CrdtClient
   ) {
     this.id = id
     this.pos = Vec2.new(x, y)
-    this.engineContext = engineContext
     this.radius = radius
+    this.stroke_width = stroke_width
+    this.opacity = opacity
+    this.fill = fill
+    this.stroke = stroke
+
+    this.engineContext = engineContext
     this.crdtClient = crdtClient
   }
 
@@ -37,17 +52,11 @@ class Circle {
   }
 
   onMouseDown(mousePos: Vec2) {
-    if (
-      this.canResize(mousePos)
-      && this.engineContext.requestResizing(this.id)
-    ) {
+    if (this.canResize(mousePos) && this.engineContext.requestResizing(this.id)) {
       return
     }
 
-    if (
-      this.canDrag(mousePos)
-      && this.engineContext.requestDragging(this.id, this.pos)
-    ) {
+    if (this.canDrag(mousePos) && this.engineContext.requestDragging(this.id, this.pos)) {
       return
     }
   }
@@ -66,15 +75,14 @@ class Circle {
       const pos = mousePos.sub(prevMousePos).add(prevPos)
       const x = Math.floor(pos.x())
       const y = Math.floor(pos.y())
-      this.crdtClient.editCircle(this.id, { pos: { x, y }})
+      this.crdtClient.editCircle(this.id, { pos: { x, y } })
       return true
     }
 
     return false
   }
 
-  onMouseUp() {
-  }
+  onMouseUp() {}
 }
 
 export default Circle
