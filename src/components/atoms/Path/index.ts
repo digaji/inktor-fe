@@ -1,10 +1,14 @@
-import CrdtClient, { PathCommand } from "@/components/organisms/Crdt"
+import CrdtClient, { PathCommand, SVGColor } from "@/components/organisms/Crdt"
 import { EngineContext } from "@/components/organisms/RenderingEngine/type"
 import { Vec2 } from "@/utils/Vec2"
 
 class Path {
     readonly id: string
     readonly points: PathCommand[]
+    readonly stroke_width: number
+    readonly opacity: number
+    readonly fill: SVGColor
+    readonly stroke: SVGColor
 
     engineContext: EngineContext
     crdtClient: CrdtClient
@@ -12,11 +16,19 @@ class Path {
     constructor(
         id: string,
         points: PathCommand[],
+        stroke_width: number,
+        opacity: number,
+        fill: SVGColor,
+        stroke: SVGColor,
         engineContext: EngineContext,
         crdtClient: CrdtClient
     ) {
         this.id = id
         this.points = points
+        this.stroke_width = stroke_width
+        this.opacity = opacity
+        this.fill = fill
+        this.stroke = stroke
         this.engineContext = engineContext
         this.crdtClient = crdtClient
     }

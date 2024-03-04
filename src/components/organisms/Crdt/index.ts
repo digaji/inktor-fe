@@ -1,4 +1,4 @@
-import { PartialSVGCircle, PartialSVGPath, PartialSVGRectangle, SVGCircle, SVGDoc, SVGDocTree, SVGPath, SVGPathCommand, SVGPathCommandType, SVGRectangle, Vec2 } from "@inktor/inktor-crdt-rs";
+import { Color, PartialSVGCircle, PartialSVGPath, PartialSVGRectangle, SVGCircle, SVGDoc, SVGDocTree, SVGPath, SVGPathCommand, SVGPathCommandType, SVGRectangle, Vec2 } from "@inktor/inktor-crdt-rs";
 
 import Circle from "@/components/atoms/Circle";
 import Path from "@/components/atoms/Path";
@@ -24,6 +24,7 @@ import { EngineContext } from "../RenderingEngine/type";
 //     - Re render the current canvas.
 
 export type PathCommand = SVGPathCommand;
+export type SVGColor = Color;
 
 class CrdtClient {
   svgDoc: SVGDoc
@@ -197,9 +198,30 @@ export const convertUtility = (
             ),
           ]
           if (it.type === "RECTANGLE")
-          return [new Rectangle(it.id, it.pos.x, it.pos.y, it.height, it.width, engineContext, crdtClient)]
+          return [new Rectangle(
+              it.id, 
+              it.pos.x, 
+              it.pos.y, 
+              it.height, 
+              it.width,
+              it.stroke_width,
+              it.opacity,
+              it.fill,
+              it.stroke,
+              engineContext, 
+              crdtClient
+            )]
           if (it.type === "PATH")
-          return [new Path(it.id, it.points, engineContext, crdtClient)]
+          return [new Path(
+            it.id, 
+            it.points, 
+            it.stroke_width,
+            it.opacity,
+            it.fill,
+            it.stroke,
+            engineContext, 
+            crdtClient
+          )]
           return []
         });
   return circles

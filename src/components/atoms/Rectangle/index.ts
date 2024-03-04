@@ -1,4 +1,4 @@
-import CrdtClient from "@/components/organisms/Crdt"
+import CrdtClient, { SVGColor } from "@/components/organisms/Crdt"
 import { EngineContext } from "@/components/organisms/RenderingEngine/type"
 import { Vec2 } from "@/utils/Vec2"
 
@@ -7,6 +7,10 @@ class Rectangle {
     readonly pos: Vec2
     readonly height: number
     readonly width: number
+    readonly stroke_width: number
+    readonly opacity: number
+    readonly fill: SVGColor
+    readonly stroke: SVGColor
     engineContext: EngineContext
     crdtClient: CrdtClient
 
@@ -16,6 +20,10 @@ class Rectangle {
         y: number,
         height: number,
         width: number,
+        stroke_width: number,
+        opacity: number,
+        fill: SVGColor,
+        stroke: SVGColor,
         engineContext: EngineContext,
         crdtClient: CrdtClient
     ) {
@@ -23,6 +31,10 @@ class Rectangle {
         this.pos = Vec2.new(x, y)
         this.height = height
         this.width = width
+        this.stroke_width = stroke_width
+        this.opacity = opacity
+        this.fill = fill
+        this.stroke = stroke
         this.engineContext = engineContext
         this.crdtClient = crdtClient
     }
