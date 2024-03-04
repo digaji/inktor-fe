@@ -26,143 +26,152 @@ import { EngineContext } from "../RenderingEngine/type";
 export type PathCommand = SVGPathCommand;
 
 class CrdtClient {
-
-    svgDoc: SVGDoc
-    peerGroupClient: PeerGroupClient
-    changeListener: () => void
-    remoteChangeListener: () => void
-    render: () => void
-    groupId: string
-    constructor() {
-        this.svgDoc = SVGDoc.new(getClientId())
-        this.changeListener = () => {
-            this.onChange()
-        }
-        this.remoteChangeListener = () => {
-            this.onChange(true)
-        }
-        this.render = () => {}
-        const crdtData = getCrdtData()
-        if (crdtData) this.svgDoc.load(crdtData)
-
-        this.groupId = location.pathname.substring(1)
-        this.peerGroupClient = new PeerGroupClient(this.groupId)
-        this.peerGroupClient.setOnNewMembersSendMessage(() => {
-            const data = this.svgDoc.save()
-            if (!data) return ""
-            return data
-        })
-        this.peerGroupClient.setOnMessageReceived((message: string) => {
-            this.svgDoc.merge(message)
-            this.remoteChangeListener()
-        });
+  svgDoc: SVGDoc
+  peerGroupClient: PeerGroupClient
+  changeListener: () => void
+  remoteChangeListener: () => void
+  render: () => void
+  groupId: string
+  constructor() {
+    this.svgDoc = SVGDoc.new(getClientId())
+    this.changeListener = () => {
+      this.onChange()
     }
-
-    onChange(noBroadcast?: boolean) {
-        const crdtData = this.svgDoc.save()
-        if (crdtData) {
-            saveCrdtData(crdtData)
-        }
-        if (!noBroadcast) {
-            const message = this.svgDoc.broadcast()
-            this.peerGroupClient.sendMessageToGroup(message)
-        }
+    this.remoteChangeListener = () => {
+      this.onChange(true)
     }
+    this.render = () => {}
+    const crdtData = getCrdtData()
+    if (crdtData) this.svgDoc.load(crdtData)
 
-    setRender(render: () => void) {
-        this.render = render
-        this.changeListener = () => {
-            this.onChange()
-            this.render()
-        }
-        this.remoteChangeListener = () => {
-            this.onChange(true)
-            this.render()
-        }
-    }
+    this.groupId = location.pathname.substring(1)
+    this.peerGroupClient = new PeerGroupClient(this.groupId)
+    this.peerGroupClient.setOnNewMembersSendMessage(() => {
+      const data = this.svgDoc.save()
+      if (!data) return ''
+      return data
+    })
+    this.peerGroupClient.setOnMessageReceived((message: string) => {
+      this.svgDoc.merge(message)
+      this.remoteChangeListener()
+    })
+  }
 
-//   get_group(group_id: string): SVGGroup | undefined;
-//   add_group(group_id: string | undefined, partial_group: PartialSVGGroup): void;
-    getCircle(circle_id: string): SVGCircle | undefined {
-        return this.svgDoc.get_circle(circle_id)
+  onChange(noBroadcast?: boolean) {
+    const crdtData = this.svgDoc.save()
+    if (crdtData) {
+      saveCrdtData(crdtData)
     }
+    if (!noBroadcast) {
+      const message = this.svgDoc.broadcast()
+      this.peerGroupClient.sendMessageToGroup(message)
+    }
+  }
 
-    addCircle(group_id: string | undefined, partial_circle: PartialSVGCircle): void {
-        this.svgDoc.add_circle(group_id, partial_circle)
-        this.changeListener()
-    }
+  setRender(render: () => void, renderToolbar?: () => void) {
+    this.render = render
+    this.changeListener = () => {
+      this.onChange()
+      this.render()
 
-    editCircle(circle_id: string, edits: PartialSVGCircle): void {
-        this.svgDoc.edit_circle(circle_id, edits)
-        this.changeListener()
+      if (renderToolbar) {
+        renderToolbar()
+      }
     }
+    this.remoteChangeListener = () => {
+      this.onChange(true)
+      this.render()
 
-    getRectangle(rectangle_id: string): SVGRectangle | undefined {
-        return this.svgDoc.get_rectangle(rectangle_id)
+      if (renderToolbar) {
+        renderToolbar()
+      }
     }
+  }
 
-    addRectangle(group_id: string | undefined, partial_rectangle: PartialSVGRectangle): void {
-        this.svgDoc.add_rectangle(group_id, partial_rectangle)
-        this.changeListener()
-    }
+  getCircle(circle_id: string): SVGCircle | undefined {
+    return this.svgDoc.get_circle(circle_id)
+  }
 
-    editRectangle(rectangle_id: string, edits: PartialSVGRectangle): void {
-        this.svgDoc.edit_rectangle(rectangle_id, edits)
-        this.changeListener()
-    }
+  addCircle(group_id: string | undefined, partial_circle: PartialSVGCircle): void {
+    this.svgDoc.add_circle(group_id, partial_circle)
+    this.changeListener()
+  }
 
-    getPath(path_id: string): SVGPath | undefined {
-        return this.svgDoc.get_path(path_id)
-    }
+  editCircle(circle_id: string, edits: PartialSVGCircle): void {
+      this.svgDoc.edit_circle(circle_id, edits)
+      this.changeListener()
+  }
 
-    addPath(group_id: string | undefined, partial_path: PartialSVGPath): void {
-        this.svgDoc.add_path(group_id, partial_path)
-        this.changeListener()
-    }
+  getRectangle(rectangle_id: string): SVGRectangle | undefined {
+      return this.svgDoc.get_rectangle(rectangle_id)
+  }
 
-    editPath(path_id: string, partial_path: PartialSVGPath): void {
-        this.svgDoc.edit_path(path_id, partial_path)
-        this.changeListener()
-    }
+  addRectangle(group_id: string | undefined, partial_rectangle: PartialSVGRectangle): void {
+      this.svgDoc.add_rectangle(group_id, partial_rectangle)
+      this.changeListener()
+  }
+
+  editRectangle(rectangle_id: string, edits: PartialSVGRectangle): void {
+      this.svgDoc.edit_rectangle(rectangle_id, edits)
+      this.changeListener()
+  }
+
+  getPath(path_id: string): SVGPath | undefined {
+      return this.svgDoc.get_path(path_id)
+  }
+
+  addPath(group_id: string | undefined, partial_path: PartialSVGPath): void {
+      this.svgDoc.add_path(group_id, partial_path)
+      this.changeListener()
+  }
+
+  editPath(path_id: string, partial_path: PartialSVGPath): void {
+      this.svgDoc.edit_path(path_id, partial_path)
+      this.changeListener()
+  }
 
 //   edit_group(group_id: string, partial_group: PartialSVGGroup): void;
 
-    editPathPointType(path_id: string, point_id: string, command_type: SVGPathCommandType): void {
-        this.svgDoc.edit_path_point_type(path_id, point_id, command_type)
-        this.changeListener()
-    }
+  editPathPointType(path_id: string, point_id: string, command_type: SVGPathCommandType): void {
+      this.svgDoc.edit_path_point_type(path_id, point_id, command_type)
+      this.changeListener()
+  }
 
-    editPathPointPos(path_id: string, point_id: string, new_pos: Vec2): void {
-        this.svgDoc.edit_path_point_pos(path_id, point_id, new_pos)
-        this.changeListener()        
-    }
+  editPathPointPos(path_id: string, point_id: string, new_pos: Vec2): void {
+      this.svgDoc.edit_path_point_pos(path_id, point_id, new_pos)
+      this.changeListener()        
+  }
 
-    editPathPointHandle1(path_id: string, point_id: string, new_handle1: Vec2): void {
-        this.svgDoc.edit_path_point_handle1(path_id, point_id, new_handle1)
-        this.changeListener()
-    }
+  editPathPointHandle1(path_id: string, point_id: string, new_handle1: Vec2): void {
+      this.svgDoc.edit_path_point_handle1(path_id, point_id, new_handle1)
+      this.changeListener()
+  }
 
-    editPathPointHandle2(path_id: string, point_id: string, new_handle2: Vec2): void {
-        this.svgDoc.edit_path_point_handle2(path_id, point_id, new_handle2)
-        this.changeListener()
-    }
+  editPathPointHandle2(path_id: string, point_id: string, new_handle2: Vec2): void {
+      this.svgDoc.edit_path_point_handle2(path_id, point_id, new_handle2)
+      this.changeListener()
+  }
 
-    addPointToPath(path_id: string, command: SVGPathCommandType, pos: Vec2): void {
-        this.svgDoc.add_point_to_path(path_id, command, pos)
-        this.changeListener()
-    }
+  addPointToPath(path_id: string, command: SVGPathCommandType, pos: Vec2): void {
+      this.svgDoc.add_point_to_path(path_id, command, pos)
+      this.changeListener()
+  }
 
 //   move_object_to_group(object_id: string, group_id: string, index: number): void;
 //   move_object_to_root(object_id: string, index: number): void;
 //   remove_object(object_id: string): void;
+  removeObject(object_id: string): void {
+    this.svgDoc.remove_object(object_id)
+    this.changeListener()
+  }
 //   remove_path_point(path_id: string, point_id: string): void;
 //   save(): string | undefined;
 //   load(data: string): void;
 //   broadcast(): string;
 //   merge(oplog: string): void;
-    children(): SVGDocTree {
-        return this.svgDoc.children()
-    }
+  children(): SVGDocTree {
+      return this.svgDoc.children()
+  }
 }
 
 export const convertUtility = (
@@ -172,15 +181,28 @@ export const convertUtility = (
 ) => {
     const circles = tree.children
         .flatMap((it): (Circle | Rectangle | Path)[] => {
-            if (it.type === "CIRCLE")
-            return [new Circle(it.id, it.pos.x, it.pos.y, it.radius, engineContext, crdtClient)]
-            if (it.type === "RECTANGLE")
-            return [new Rectangle(it.id, it.pos.x, it.pos.y, it.height, it.width, engineContext, crdtClient)]
-            if (it.type === "PATH")
-            return [new Path(it.id, it.points, engineContext, crdtClient)]
-            return []
+          if (it.type === "CIRCLE")
+          return [
+            new Circle(
+              it.id,
+              it.pos.x,
+              it.pos.y,
+              it.radius,
+              it.stroke_width,
+              it.opacity,
+              it.fill,
+              it.stroke,
+              engineContext,
+              crdtClient
+            ),
+          ]
+          if (it.type === "RECTANGLE")
+          return [new Rectangle(it.id, it.pos.x, it.pos.y, it.height, it.width, engineContext, crdtClient)]
+          if (it.type === "PATH")
+          return [new Path(it.id, it.points, engineContext, crdtClient)]
+          return []
         });
-    return circles
+  return circles
 }
 
 export default CrdtClient

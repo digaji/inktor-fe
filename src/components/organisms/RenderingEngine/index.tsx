@@ -1,8 +1,11 @@
+import { Color } from '@inktor/inktor-crdt-rs'
+
 import Circle from '@/components/atoms/Circle'
 import Grid from '@/components/atoms/Grid'
 import Path from '@/components/atoms/Path'
 import Rectangle from '@/components/atoms/Rectangle'
 import CrdtClient, { convertUtility,PathCommand } from '@/components/organisms/Crdt'
+import rgbaToHex from '@/utils/rgbaToHex'
 import { Vec2 } from '@/utils/Vec2'
 
 import { MouseContext, MouseScroll,MouseWheel } from '../Canvas/types'
@@ -24,9 +27,11 @@ class RenderingEngine {
   currentDraggingId: string | null
   currentResizingId: string | null
   currentDraggingData: {
-    lastMouseCanvasPos: Vec2,
+    lastMouseCanvasPos: Vec2
     lastObjectCanvasPos: Vec2
   }
+  renderPropbarCallback: () => void
+  selected: Circle | Rectangle | Path | undefined
 
   crdtClient: CrdtClient
 
@@ -38,11 +43,12 @@ class RenderingEngine {
     this.screenScale = 1
     this.currentDraggingId = null
     this.currentResizingId = null
-    this.state = "NORMAL"
+    this.state = 'NORMAL'
     this.currentDraggingData = {
       lastMouseCanvasPos: Vec2.zero(),
-      lastObjectCanvasPos: Vec2.zero()
+      lastObjectCanvasPos: Vec2.zero(),
     }
+
     this.context = {
       getState: () => {
         return this.state
@@ -57,7 +63,7 @@ class RenderingEngine {
         this.currentDraggingId = objectId
         this.currentDraggingData = {
           lastMouseCanvasPos: this.screenToCanvas(this.currentMousePos),
-          lastObjectCanvasPos: objectCanvasPos
+          lastObjectCanvasPos: objectCanvasPos,
         }
         return true
       },
@@ -77,13 +83,22 @@ class RenderingEngine {
     this.grid = Grid(50, 10, 10)
     this.objects = []
 
+    this.renderPropbarCallback = () => {}
+
     this.crdtClient = new CrdtClient()
-    this.crdtClient.setRender(() => {
-      const tree = this.crdtClient.children()
-      this.objects = convertUtility(tree, this.crdtClient, this.context)
-    })
+    this.crdtClient.setRender(
+      () => {
+        const tree = this.crdtClient.children()
+        this.objects = convertUtility(tree, this.crdtClient, this.context)
+      },
+      () => {
+        this.renderPropbar()
+      }
+    )
+
     const tree = this.crdtClient.children()
     this.objects = convertUtility(tree, this.crdtClient, this.context)
+    this.selected = undefined
   }
 
   setAddCircle() {
@@ -122,6 +137,14 @@ class RenderingEngine {
     return canvasPos.scale(this.screenScale).add(this.viewOffset)
   }
 
+  renderPropbar() {
+    this.renderPropbarCallback()
+  }
+
+  setRenderPropbar(renderPropbar: () => void) {
+    this.renderPropbarCallback = renderPropbar
+  }
+
   onMouseDown(ctx: MouseContext) {
     this.mouseDown = true
     this.lastMousePos = ctx.pos.copy()
@@ -129,9 +152,13 @@ class RenderingEngine {
 
     const mousePos = this.screenToCanvas(ctx.pos)
 
+    this.selected = undefined
+
     this.objects.forEach((object) => {
       if (!(object.canDrag(mousePos) || object.canResize(mousePos))) return
+
       object.onMouseDown(mousePos)
+      this.selected = object
     })
   }
 
@@ -178,11 +205,11 @@ class RenderingEngine {
   }
 
   setNormalMode() {
-    this.state = "NORMAL"
+    this.state = 'NORMAL'
   }
 
   setResizeMode() {
-    this.state = "RESIZE"
+    this.state = 'RESIZE'
   }
 
   renderSimple(ctx: CanvasRenderingContext2D) {
@@ -190,30 +217,43 @@ class RenderingEngine {
       x: number
       y: number
       r: number
-      fill?: string
-      shadow?: {
-        color: string
-        blur: number
-      }
       stroke?: {
-        color: string
+        color: Color | string
         width: number
+      }
+      opacity: number
+      fill: Color
+      shadow?: {
+        color: Color | string
+        blur: number
       }
     }) => {
       const shadow = data.shadow
       const stroke = data.stroke
 
       if (shadow) {
-        ctx.shadowColor = shadow.color
+        if (typeof shadow.color === 'string') {
+          ctx.shadowColor = shadow.color
+        } else {
+          ctx.shadowColor = rgbaToHex(shadow.color)
+        }
         ctx.shadowBlur = shadow.blur
       }
 
       if (stroke) {
-        ctx.strokeStyle = stroke.color
+        if (typeof stroke.color === 'string') {
+          ctx.strokeStyle = stroke.color
+        } else {
+          ctx.strokeStyle = rgbaToHex(stroke.color)
+        }
         ctx.lineWidth = stroke.width
       }
 
-      ctx.fillStyle = data.fill ?? 'black'
+      const fill = data.fill
+      fill[fill.length - 1] = data.opacity
+
+      ctx.fillStyle = rgbaToHex(fill)
+
       ctx.beginPath()
       ctx.arc(data.x, data.y, data.r, 0, 2 * Math.PI)
       ctx.fill()
@@ -332,7 +372,7 @@ class RenderingEngine {
         x: x,
         y: y,
         r: RenderingEngine.resizeHandleScreenSize,
-        fill: 'white',
+        fill: [255, 255, 255, 1],
         shadow: {
           color: 'black',
           blur: 5
@@ -340,7 +380,8 @@ class RenderingEngine {
         stroke: {
           color: '#0c8ce9',
           width: 1.5
-        }
+        },
+        opacity: 1
       })
     }
 
@@ -455,19 +496,9 @@ class RenderingEngine {
     renderSimple.rectangle({ x: pX, y: pY, height, width, fill: "black" })
 
     if (this.state === "RESIZE") {
-      renderSimple.circle({
+      renderSimple.handle({
         x: pX + width,
-        y: pY + height,
-        r: RenderingEngine.resizeHandleScreenSize,
-        fill: 'white',
-        shadow: {
-          color: 'black',
-          blur: 5
-        },
-        stroke: {
-          color: '#0c8ce9',
-          width: 1.5
-        }
+        y: pY + height
       })
     }
   }
@@ -478,24 +509,17 @@ class RenderingEngine {
     const pX = screenCirclePos.x()
     const pY = screenCirclePos.y()
     const r = circle.radius * this.screenScale
+    const stroke = {
+      color: circle.stroke,
+      width: circle.stroke_width,
+    }
+    const opacity = circle.opacity
+    const fill = circle.fill
 
-    renderSimple.circle({ x: pX, y: pY, r, fill: 'black' })
+    renderSimple.circle({ x: pX, y: pY, r, stroke: stroke, opacity: opacity, fill: fill })
 
     if (this.state === 'RESIZE') {
-      renderSimple.circle({
-        x: pX + r,
-        y: pY,
-        r: RenderingEngine.resizeHandleScreenSize,
-        fill: 'white',
-        shadow: {
-          color: 'black',
-          blur: 5,
-        },
-        stroke: {
-          color: '#0c8ce9',
-          width: 1.5,
-        },
-      })
+      renderSimple.handle({ x: pX + r, y: pY })
     }
   }
 

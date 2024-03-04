@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.toolbar {
+  --height: 60%;
+
+  top: calc(50% - var(--height) / 2);
+}
