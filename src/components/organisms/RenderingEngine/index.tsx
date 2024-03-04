@@ -113,18 +113,14 @@ class RenderingEngine {
     this.crdtClient.addPath(undefined, { points: [ 
       { type: "START", pos: { x: 0, y: 0 } },
       { type: "BEZIER",
-        pos: { x: 50, y: 50 },
-        handle1: { x: 50, y: 0},
-        handle2: { x: 0, y: 50 }
-      },
-      { type: "BEZIER",
-        pos: { x: 50, y: 50 },
-        handle1: { x: 50, y: 0},
-        handle2: { x: 0, y: 50 }
+        pos: { x: 50, y: 0 },
+        handle1: { x: 0, y: -50 },
+        handle2: { x: 0, y: -50 }
       },
       {
         type: "BEZIER_QUAD",
-        pos: { x: 50, y: 50 }
+        pos: { x: 0, y: 50 },
+        handle: { x: 0, y: 50 }
       }
     ]})
   }
