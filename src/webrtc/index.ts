@@ -79,8 +79,6 @@ class PeerGroupClient {
     this.pollRoomIntervalId = setInterval(async () => {
       if (!this.roomId) return
 
-      console.log('joinGroup roomId ', this.roomId)
-
       const newMemberIds = await roomMembers(this.roomId)
       const diff = newMemberIds.filter((it) => !this.memberIds.has(it) && it !== this.peerId)
 
@@ -89,10 +87,7 @@ class PeerGroupClient {
         const opening = new Promise<null>((resolve, _) => conn.on('open', () => resolve(null)))
         await opening
 
-        console.log('after opening')
-
         this.memberIds.set(newMember, conn.connectionId)
-        console.log('joinGroup member(s) ', this.memberIds)
       }
 
       const oldMemberIds = this.memberIds.keys()
@@ -110,24 +105,13 @@ class PeerGroupClient {
         const message = this.onNewMembersSendMessage()
         await this.sendMessageToGroup(message)
       }
-
-      console.log('joinGroup member(s) end ', this.memberIds)
     }, 1000)
   }
 
   async sendMessageToGroup(message: string) {
-    console.log('sendMessageToGroup')
-    console.log('sendMessageToGroup room ' + this.roomId)
-    console.log('sendMessageToGroup peer ' + this.peerId)
-    console.log('sendMessageToGroup member(s) ', this.memberIds)
-
     if (!this.roomId || !this.peerId) return
 
     for (const [memberId, connId] of this.memberIds) {
-      console.log('sendMessageToGroup - forLoop')
-      console.log('sendMessageToGroup member ' + memberId)
-      console.log('sendMessageToGroup conn ' + connId)
-
       if (memberId === this.peerId) continue
 
       const conn = this.peerClient.getConnection(memberId, connId)
