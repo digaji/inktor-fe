@@ -49,13 +49,13 @@ const AddOptions: FC<AddOptions> = ({ visible = false, setAddCircle, setAddRect,
         onClick={setAddCircle}
       />
 
-      <ToolbarButton 
+      <ToolbarButton
         content={<IcRect />}
         onClick={setAddRect}
       />
 
       <ToolbarButton
-        content={<IcPath />} 
+        content={<IcPath />}
         onClick={setAddPath}
       />
     </div>
@@ -72,7 +72,15 @@ interface Toolbar {
   showAddOptions: boolean
 }
 
-const Toolbar: FC<Toolbar> = ({ setNormalMode, setResizeMode, onClickAdd, setAddCircle, setAddRectangle, setAddPath, showAddOptions }) => {
+const Toolbar: FC<Toolbar> = ({
+  setNormalMode,
+  setResizeMode,
+  onClickAdd,
+  setAddCircle,
+  setAddRectangle,
+  setAddPath,
+  showAddOptions,
+}) => {
   const [active, setActive] = useState('pointer')
 
   return (

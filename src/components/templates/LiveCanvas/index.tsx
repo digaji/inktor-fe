@@ -1,11 +1,15 @@
 import { useCallback, useRef, useState } from 'react'
 
+import Circle from '@/components/atoms/Circle'
+import Path from '@/components/atoms/Path'
+import Rectangle from '@/components/atoms/Rectangle'
 import Canvas from '@/components/organisms/Canvas'
 import { CanvasDraw, MouseContext, MouseWheel } from '@/components/organisms/Canvas/types'
 import RenderingEngine from '@/components/organisms/RenderingEngine'
 import PropertiesBar from '@/components/particles/PropertiesBar'
 import Settings from '@/components/particles/Settings'
 import Toolbar from '@/components/particles/Toolbar'
+import { useAssertions } from '@/hooks/useAssertions'
 
 let engine: RenderingEngine | null = null
 
@@ -87,31 +91,35 @@ const useRenderingEngine = () => {
   }
 }
 
-function LiveCanvas() {
-  const { 
-    draw, 
+const LiveCanvas = () => {
+  const {
+    draw,
     selected,
     client,
-    onMouseMove, 
-    onMouseDown, 
-    onMouseUp, 
-    onMouseWheel, 
+    onMouseMove,
+    onMouseDown,
+    onMouseUp,
+    onMouseWheel,
     setSelected,
-    setResizeMode, 
-    setNormalMode, 
+    setResizeMode,
+    setNormalMode,
     setRenderPropbar,
     ...other
   } = useRenderingEngine()
-  const [showAddOptions, setShowAddOption] = useState(false);
+  const [showAddOptions, setShowAddOption] = useState(false)
+  const assertions = useAssertions()
 
   const onClickAdd = useCallback(() => {
     setShowAddOption((prev) => !prev)
   }, [setShowAddOption])
 
-  const onMouseDownExtra = useCallback((ctx: MouseContext) => {
-    setShowAddOption(false)
-    onMouseDown(ctx)
-  }, [onMouseDown, setShowAddOption])
+  const onMouseDownExtra = useCallback(
+    (ctx: MouseContext) => {
+      setShowAddOption(false)
+      onMouseDown(ctx)
+    },
+    [onMouseDown, setShowAddOption]
+  )
 
   const setAddCircle = useCallback(() => {
     other.setAddCircle()
@@ -131,7 +139,19 @@ function LiveCanvas() {
     client.removeObject(selected.id)
   }, [client, selected])
 
-  const circle = selected ? client.getCircle(selected.id) : undefined
+  const assertInstance = (selected: Circle | Rectangle | Path) => {
+    switch (true) {
+      case selected instanceof Circle || assertions.isCircle(selected):
+        return client.getCircle(selected.id)
+      case selected instanceof Rectangle || assertions.isRect(selected):
+        return client.getRectangle(selected.id)
+      case selected instanceof Path || assertions.isPath(selected):
+        return client.getPath(selected.id)
+    }
+  }
+
+  const element = selected ? assertInstance(selected) : undefined
+
   return (
     <main>
       <Toolbar
@@ -144,12 +164,12 @@ function LiveCanvas() {
         showAddOptions={showAddOptions}
       />
 
-      <Settings propBarVisible={!!circle} />
+      <Settings propBarVisible={!!element} />
 
-      {circle && (
+      {element && (
         <PropertiesBar
           client={client}
-          selected={circle}
+          selected={element}
           setSelected={setSelected}
           onClickDelete={onClickDelete}
           setRenderPropbar={setRenderPropbar}
