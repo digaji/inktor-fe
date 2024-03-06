@@ -7,7 +7,7 @@ import Toggle from '@/components/atoms/Toggle'
 import clsxm from '@/utils/clsxm'
 
 interface Settings {
-  propBarVisible?: boolean
+  propBarVisible: boolean
 }
 
 const Settings: FC<Settings> = ({ propBarVisible }) => {

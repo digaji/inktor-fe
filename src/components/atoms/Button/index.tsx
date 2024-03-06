@@ -1,6 +1,7 @@
-import clsxm from '@/utils/clsxm'
 import { FC, MouseEventHandler } from 'react'
 import { Link } from 'react-router-dom'
+
+import clsxm from '@/utils/clsxm'
 
 interface ButtonProps {
   text: string

@@ -173,16 +173,21 @@ class CrdtClient {
 
   //   move_object_to_group(object_id: string, group_id: string, index: number): void;
   //   move_object_to_root(object_id: string, index: number): void;
-  //   remove_object(object_id: string): void;
   removeObject(object_id: string): void {
     this.svgDoc.remove_object(object_id)
     this.changeListener()
   }
-  //   remove_path_point(path_id: string, point_id: string): void;
+
+  removePathPoint(path_id: string, point_id: string): void {
+    this.svgDoc.remove_path_point(path_id, point_id)
+    this.changeListener()
+  }
+
   //   save(): string | undefined;
   //   load(data: string): void;
   //   broadcast(): string;
   //   merge(oplog: string): void;
+
   children(): SVGDocTree {
     return this.svgDoc.children()
   }

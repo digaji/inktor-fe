@@ -3,14 +3,17 @@ import { FC } from 'react'
 import { RgbaColorPicker } from 'react-colorful'
 
 import IcTrash from '@/assets/icons/ic-trash.svg?react'
+import Button from '@/components/atoms/Button'
 import Circle from '@/components/atoms/Circle'
 import ColorPicker from '@/components/atoms/ColorPicker'
 import Path from '@/components/atoms/Path'
 import Rectangle from '@/components/atoms/Rectangle'
+import ConfigurationPathCommandRow from '@/components/organisms/ConfigurationPathCommandRow'
 import CrdtClient from '@/components/organisms/Crdt'
 import { useAssertions } from '@/hooks/useAssertions'
 import { useColorPicker } from '@/hooks/useColorPicker'
 import { useOperations } from '@/hooks/useOperations'
+import clsxm from '@/utils/clsxm'
 import rgbaToHex from '@/utils/rgbaToHex'
 
 interface PropertiesBar {
@@ -38,13 +41,23 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
 
   return (
     <section
-      className='absolute right-0 flex h-screen w-80 flex-col gap-2 divide-y-2 border-l-2 border-black bg-white p-2'
+      className={clsxm(
+        'absolute right-0 flex h-screen w-80 flex-col gap-2 divide-y-2 border-l-2 border-black bg-white p-2 transition-all duration-150',
+        assertions.isPath(selected) && 'w-5/12'
+      )}
       onClick={() => {
         fillPicker.hideColorPicker()
         strokePicker.hideColorPicker()
       }}
     >
-      <h1 className='text-xl'>{selectedType}</h1>
+      <div className='flex justify-between p-1'>
+        <h1 className='text-3xl'>{selectedType}</h1>
+
+        <IcTrash
+          className='h-9 w-9 rounded-md p-1 transition-all duration-150 hover:cursor-pointer hover:bg-red-500'
+          onClick={onClickDelete}
+        />
+      </div>
 
       {(assertions.isCircle(selected) || assertions.isRect(selected)) && (
         <>
@@ -190,12 +203,37 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
             />
           )}
         </ColorPicker>
-
-        <IcTrash
-          className='mt-4 h-12 w-12 rounded-md p-1 transition-all duration-150 hover:cursor-pointer hover:bg-red-500'
-          onClick={onClickDelete}
-        />
       </div>
+
+      {assertions.isPath(selected) && (
+        <div className='p-1'>
+          <div className='grid grid-cols-9 items-center gap-2 text-center text-lg'>
+            <p className='col-span-2'>Command</p>
+            <p>X</p>
+            <p>Y</p>
+            <p>H1 X</p>
+            <p>H1 Y</p>
+            <p>H2 X</p>
+            <p>H2 Y</p>
+            <p />
+
+            {selected.points.map((p) => (
+              <ConfigurationPathCommandRow
+                key={p.id}
+                pathId={selected.id}
+                data={p}
+                client={client}
+              />
+            ))}
+          </div>
+
+          <Button
+            className='mt-2'
+            text='Add Path'
+            onClick={elementOperations.onClickAddPathCommand}
+          />
+        </div>
+      )}
     </section>
   )
 }

@@ -305,32 +305,46 @@ class RenderingEngine {
     }
 
     const renderPath = (data: {
-      fill?: string
+      opacity: number
+      fill: Color
       stroke?: {
-        color: string
+        color: Color | string
         width: number
       }
       points: PathCommand[]
     }) => {
       const stroke = data.stroke
+
       if (stroke) {
-        ctx.strokeStyle = stroke.color
+        if (typeof stroke.color === 'string') {
+          ctx.strokeStyle = stroke.color
+        } else {
+          ctx.strokeStyle = rgbaToHex(stroke.color)
+        }
         ctx.lineWidth = stroke.width
       }
 
-      ctx.fillStyle = data.fill ?? 'black'
+      const fill = data.fill
+      fill[fill.length - 1] = data.opacity
+
+      ctx.fillStyle = rgbaToHex(fill)
+
       ctx.beginPath()
+
       let isClosed = false
       let prevPos: Vec2 | null = null
+
       for (const point of data.points) {
         if (point.type === 'START') {
           const pos = Vec2.new(point.pos.x, point.pos.y)
           const screenPos = this.canvasToScreen(pos)
+
           ctx.moveTo(screenPos.x(), screenPos.y())
           prevPos = pos
         } else if (point.type === 'LINE') {
           const pos = Vec2.new(point.pos.x, point.pos.y)
           const screenPos = this.canvasToScreen(pos)
+
           ctx.lineTo(screenPos.x(), screenPos.y())
           prevPos = pos
         } else if (point.type === 'BEZIER') {
@@ -341,6 +355,7 @@ class RenderingEngine {
           const screenHandle1 = this.canvasToScreen(handle1)
           const handle2 = Vec2.new(point.handle2.x, point.handle2.y).add(pos)
           const screenHandle2 = this.canvasToScreen(handle2)
+
           ctx.bezierCurveTo(
             screenHandle1.x(),
             screenHandle1.y(),
@@ -349,13 +364,16 @@ class RenderingEngine {
             screenPos.x(),
             screenPos.y()
           )
+
           prevPos = pos
         } else if (point.type === 'BEZIER_QUAD') {
           if (prevPos === null) continue
+
           const pos = Vec2.new(point.pos.x, point.pos.y)
           const screenPos = this.canvasToScreen(pos)
           const handle = Vec2.new(point.handle.x, point.handle.y).add(prevPos)
           const screenHandle = this.canvasToScreen(handle)
+
           ctx.bezierCurveTo(
             screenHandle.x(),
             screenHandle.y(),
@@ -364,12 +382,14 @@ class RenderingEngine {
             screenPos.x(),
             screenPos.y()
           )
+
           prevPos = pos
         } else if (point.type === 'CLOSE') {
           isClosed = true
           break
         }
       }
+
       if (isClosed) {
         ctx.fill()
       } else {
@@ -414,9 +434,15 @@ class RenderingEngine {
 
   renderPath(path: Path, ctx: CanvasRenderingContext2D) {
     const renderSimple = this.renderSimple(ctx)
+    const opacity = path.opacity
+    const fill = path.fill
     const points = path.points
+    const stroke = {
+      color: path.stroke,
+      width: path.stroke_width,
+    }
 
-    renderSimple.path({ points, stroke: { color: 'black', width: 2 } })
+    renderSimple.path({ opacity, fill, stroke, points })
     if (this.state !== 'RESIZE') return
 
     // Rendering handles
