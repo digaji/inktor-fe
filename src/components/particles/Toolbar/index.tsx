@@ -36,7 +36,7 @@ interface AddOptions {
   setAddPath?: () => void
 }
 
-const AddOptions: FC<AddOptions> = ({ visible = false, setAddCircle }) => {
+const AddOptions: FC<AddOptions> = ({ visible = false, setAddCircle, setAddRect, setAddPath }) => {
   return (
     <div
       className={clsxm(
@@ -49,9 +49,15 @@ const AddOptions: FC<AddOptions> = ({ visible = false, setAddCircle }) => {
         onClick={setAddCircle}
       />
 
-      <ToolbarButton content={<IcRect />} />
+      <ToolbarButton
+        content={<IcRect />}
+        onClick={setAddRect}
+      />
 
-      <ToolbarButton content={<IcPath />} />
+      <ToolbarButton
+        content={<IcPath />}
+        onClick={setAddPath}
+      />
     </div>
   )
 }
@@ -61,10 +67,20 @@ interface Toolbar {
   setResizeMode: () => void
   onClickAdd: () => void
   setAddCircle: () => void
+  setAddRectangle?: () => void
+  setAddPath?: () => void
   showAddOptions: boolean
 }
 
-const Toolbar: FC<Toolbar> = ({ setNormalMode, setResizeMode, onClickAdd, setAddCircle, showAddOptions }) => {
+const Toolbar: FC<Toolbar> = ({
+  setNormalMode,
+  setResizeMode,
+  onClickAdd,
+  setAddCircle,
+  setAddRectangle,
+  setAddPath,
+  showAddOptions,
+}) => {
   const [active, setActive] = useState('pointer')
 
   return (
@@ -78,6 +94,8 @@ const Toolbar: FC<Toolbar> = ({ setNormalMode, setResizeMode, onClickAdd, setAdd
         <AddOptions
           visible={showAddOptions}
           setAddCircle={setAddCircle}
+          setAddRect={setAddRectangle}
+          setAddPath={setAddPath}
         />
 
         <ToolbarButton

@@ -2,10 +2,11 @@ import CrdtClient, { SVGColor } from '@/components/organisms/Crdt'
 import { EngineContext } from '@/components/organisms/RenderingEngine/type'
 import { Vec2 } from '@/utils/Vec2'
 
-class Circle {
+class Rectangle {
   readonly id: string
   readonly pos: Vec2
-  readonly radius: number
+  readonly height: number
+  readonly width: number
   readonly stroke_width: number
   readonly opacity: number
   readonly fill: SVGColor
@@ -17,7 +18,8 @@ class Circle {
     id: string,
     x: number,
     y: number,
-    radius: number,
+    height: number,
+    width: number,
     stroke_width: number,
     opacity: number,
     fill: SVGColor,
@@ -27,25 +29,26 @@ class Circle {
   ) {
     this.id = id
     this.pos = Vec2.new(x, y)
-    this.radius = radius
+    this.height = height
+    this.width = width
     this.stroke_width = stroke_width
     this.opacity = opacity
     this.fill = fill
     this.stroke = stroke
-
     this.engineContext = engineContext
     this.crdtClient = crdtClient
   }
 
   canDrag(mousePos: Vec2) {
-    return mousePos.dist(this.pos) <= this.radius
+    const xWithin = this.pos.x() <= mousePos.x() && mousePos.x() <= this.pos.x() + this.width
+    const yWithin = this.pos.y() <= mousePos.y() && mousePos.y() <= this.pos.y() + this.height
+    return xWithin && yWithin
   }
 
   canResize(mousePos: Vec2) {
-    const resizeHandlePos = this.pos.add(Vec2.new(this.radius, 0))
+    const resizeHandlePos = this.pos.add(Vec2.new(this.width, this.height))
     const closeEnough = mousePos.dist(resizeHandlePos) <= this.engineContext.getResizeHandleScreenRadius()
     const isModeResize = this.engineContext.getState() === 'RESIZE'
-
     return closeEnough && isModeResize
   }
 
@@ -61,9 +64,10 @@ class Circle {
 
   onMouseMove(mousePos: Vec2) {
     if (this.engineContext.isResizing(this.id)) {
-      const newRad = Math.floor(mousePos.sub(this.pos).mag())
-      // this.radius = newRad
-      this.crdtClient.editCircle(this.id, { radius: newRad })
+      const diff = mousePos.sub(this.pos)
+      const newHeight = diff.y()
+      const newWidth = diff.x()
+      this.crdtClient.editRectangle(this.id, { height: newHeight, width: newWidth })
       return true
     }
 
@@ -73,14 +77,17 @@ class Circle {
       const pos = mousePos.sub(prevMousePos).add(prevPos)
       const x = Math.floor(pos.x())
       const y = Math.floor(pos.y())
-      this.crdtClient.editCircle(this.id, { pos: { x, y } })
+      this.crdtClient.editRectangle(this.id, { pos: { x, y } })
       return true
     }
-
     return false
   }
 
   onMouseUp() {}
+
+  // canDrag(mousePos: Vec2) {
+
+  // }
 }
 
-export default Circle
+export default Rectangle

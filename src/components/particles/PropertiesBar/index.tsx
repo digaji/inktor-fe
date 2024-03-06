@@ -1,18 +1,25 @@
-import { SVGCircle } from '@inktor/inktor-crdt-rs'
-import { FC, useCallback } from 'react'
-import { RgbaColor, RgbaColorPicker } from 'react-colorful'
+import { SVGCircle, SVGPath, SVGRectangle } from '@inktor/inktor-crdt-rs'
+import { FC } from 'react'
+import { RgbaColorPicker } from 'react-colorful'
 
 import IcTrash from '@/assets/icons/ic-trash.svg?react'
+import Button from '@/components/atoms/Button'
 import Circle from '@/components/atoms/Circle'
 import ColorPicker from '@/components/atoms/ColorPicker'
+import Path from '@/components/atoms/Path'
+import Rectangle from '@/components/atoms/Rectangle'
+import ConfigurationPathCommandRow from '@/components/organisms/ConfigurationPathCommandRow'
 import CrdtClient from '@/components/organisms/Crdt'
+import { useAssertions } from '@/hooks/useAssertions'
 import { useColorPicker } from '@/hooks/useColorPicker'
+import { useOperations } from '@/hooks/useOperations'
+import clsxm from '@/utils/clsxm'
 import rgbaToHex from '@/utils/rgbaToHex'
 
 interface PropertiesBar {
   client: CrdtClient
-  selected: SVGCircle
-  setSelected: React.Dispatch<React.SetStateAction<Circle | undefined>>
+  selected: SVGCircle | SVGRectangle | SVGPath
+  setSelected: React.Dispatch<React.SetStateAction<Circle | Rectangle | Path | undefined>>
   onClickDelete: () => void
   setRenderPropbar: (fn: () => void) => void
 }
@@ -21,138 +28,113 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
   const fillPicker = useColorPicker()
   const strokePicker = useColorPicker()
 
+  const elementOperations = useOperations({ client, selected })
+  const selectedType = elementOperations.selectedType
+  const assertions = useAssertions()
+
   const [fillRed, fillGreen, fillBlue, fillOpacity] = selected.fill
   const [strokeRed, strokeGreen, strokeBlue, strokeOpacity] = selected.stroke
 
-  const onChangeX = useCallback(
-    (s: string) => {
-      const x = parseInt(s)
-      if (selected === undefined) return
-      if (Number.isNaN(x)) return
-
-      const pos = structuredClone(selected.pos)
-      pos.x = x
-      client.editCircle(selected.id, { pos })
-    },
-    [client, selected]
-  )
-
-  const onChangeY = useCallback(
-    (s: string) => {
-      const y = parseInt(s)
-      if (selected === undefined) return
-      if (Number.isNaN(y)) return
-
-      const pos = structuredClone(selected.pos)
-      pos.y = y
-      client.editCircle(selected.id, { pos })
-    },
-    [client, selected]
-  )
-
-  const onChangeRadius = useCallback(
-    (s: string) => {
-      const radius = parseInt(s)
-      if (selected === undefined) return
-      if (Number.isNaN(radius)) return
-
-      client.editCircle(selected.id, { radius })
-    },
-    [client, selected]
-  )
-
-  const onChangeStrokeWidth = useCallback(
-    (s: string) => {
-      const strokeWidth = parseInt(s)
-      if (selected === undefined) return
-      if (Number.isNaN(strokeWidth)) return
-
-      client.editCircle(selected.id, { stroke_width: strokeWidth })
-    },
-    [client, selected]
-  )
-
-  const onChangeOpacity = useCallback(
-    (s: string) => {
-      const opacity = parseFloat(s)
-      if (selected === undefined) return
-      if (Number.isNaN(opacity)) return
-
-      client.editCircle(selected.id, { opacity: opacity })
-    },
-    [client, selected]
-  )
-
-  const onChangeFill = useCallback(
-    (color: RgbaColor) => {
-      if (selected === undefined) return
-
-      client.editCircle(selected.id, { fill: [color.r, color.g, color.b, color.a] })
-    },
-    [client, selected]
-  )
-
-  const onChangeStroke = useCallback(
-    (color: RgbaColor) => {
-      if (selected === undefined) return
-
-      client.editCircle(selected.id, { stroke: [color.r, color.g, color.b, color.a] })
-    },
-    [client, selected]
-  )
-
   setRenderPropbar(() => {
-    setSelected(selected as unknown as Circle)
+    setSelected(selected as Circle | Rectangle | Path)
   })
 
   return (
     <section
-      className='absolute right-0 flex h-screen w-80 flex-col gap-2 divide-y-2 bg-white p-2'
+      className={clsxm(
+        'absolute right-0 flex h-screen w-80 flex-col gap-2 divide-y-2 border-l-2 border-black bg-white p-2 transition-all duration-150',
+        assertions.isPath(selected) && 'w-5/12'
+      )}
       onClick={() => {
         fillPicker.hideColorPicker()
         strokePicker.hideColorPicker()
       }}
     >
-      <h1 className='text-xl'>Circle</h1>
-
       <div className='flex justify-between p-1'>
-        <label className='text-lg'>X: {selected.pos.x}</label>
+        <h1 className='text-3xl'>{selectedType}</h1>
 
-        <input
-          min={-100}
-          max={100}
-          value={selected.pos.x}
-          type='range'
-          onChange={(e) => onChangeX(e.target.value)}
+        <IcTrash
+          className='h-9 w-9 rounded-md p-1 transition-all duration-150 hover:cursor-pointer hover:bg-red-500'
+          onClick={onClickDelete}
         />
       </div>
 
-      <div className='flex justify-between p-1'>
-        <label className='text-lg'>Y: {selected.pos.y}</label>
+      {(assertions.isCircle(selected) || assertions.isRect(selected)) && (
+        <>
+          <div className='flex justify-between p-1'>
+            <label className='text-lg'>X: {selected.pos.x}</label>
 
-        <input
-          min={-100}
-          max={100}
-          value={selected.pos.y}
-          type='range'
-          onChange={(e) => {
-            onChangeY(e.target.value)
-          }}
-        />
-      </div>
-      <div className='flex justify-between p-1'>
-        <label className='text-lg'>Radius: {selected.radius}</label>
+            <input
+              min={-100}
+              max={100}
+              value={selected.pos.x}
+              type='range'
+              onChange={(e) => elementOperations.onChangeX(e.target.value)}
+            />
+          </div>
 
-        <input
-          min={0}
-          max={150}
-          value={selected.radius}
-          type='range'
-          onChange={(e) => {
-            onChangeRadius(e.target.value)
-          }}
-        />
-      </div>
+          <div className='flex justify-between p-1'>
+            <label className='text-lg'>Y: {selected.pos.y}</label>
+
+            <input
+              min={-100}
+              max={100}
+              value={selected.pos.y}
+              type='range'
+              onChange={(e) => {
+                elementOperations.onChangeY(e.target.value)
+              }}
+            />
+          </div>
+        </>
+      )}
+
+      {assertions.isCircle(selected) && (
+        <div className='flex justify-between p-1'>
+          <label className='text-lg'>Radius: {selected.radius}</label>
+
+          <input
+            min={0}
+            max={150}
+            value={selected.radius}
+            type='range'
+            onChange={(e) => {
+              elementOperations.onChangeRadius(e.target.value)
+            }}
+          />
+        </div>
+      )}
+
+      {assertions.isRect(selected) && (
+        <>
+          <div className='flex justify-between p-1'>
+            <label className='text-lg'>Width: {selected.width}</label>
+
+            <input
+              min={0}
+              max={500}
+              value={selected.width}
+              type='range'
+              onChange={(e) => {
+                elementOperations.onChangeWidth(e.target.value)
+              }}
+            />
+          </div>
+          <div className='flex justify-between p-1'>
+            <label className='text-lg'>Height: {selected.height}</label>
+
+            <input
+              min={0}
+              max={500}
+              value={selected.height}
+              type='range'
+              onChange={(e) => {
+                elementOperations.onChangeHeight(e.target.value)
+              }}
+            />
+          </div>
+        </>
+      )}
 
       <div className='flex justify-between p-1'>
         <label className='text-lg'>Stroke Width: {selected.stroke_width}</label>
@@ -163,7 +145,7 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
           value={selected.stroke_width}
           type='range'
           onChange={(e) => {
-            onChangeStrokeWidth(e.target.value)
+            elementOperations.onChangeStrokeWidth(e.target.value)
           }}
         />
       </div>
@@ -178,7 +160,7 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
           type='range'
           value={selected.opacity}
           onChange={(e) => {
-            onChangeOpacity(e.target.value)
+            elementOperations.onChangeOpacity(e.target.value)
           }}
         />
       </div>
@@ -196,7 +178,7 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
           {fillPicker.show && (
             <RgbaColorPicker
               style={{ position: 'absolute', zIndex: 5, left: '4em' }}
-              onChange={onChangeFill}
+              onChange={elementOperations.onChangeFill}
               color={{ r: fillRed, g: fillGreen, b: fillBlue, a: fillOpacity }}
             />
           )}
@@ -216,17 +198,42 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
           {strokePicker.show && (
             <RgbaColorPicker
               style={{ position: 'absolute', zIndex: 5, left: '4em' }}
-              onChange={onChangeStroke}
+              onChange={elementOperations.onChangeStroke}
               color={{ r: strokeRed, g: strokeGreen, b: strokeBlue, a: strokeOpacity }}
             />
           )}
         </ColorPicker>
-
-        <IcTrash
-          className='mt-4 h-12 w-12 rounded-md p-1 transition-all duration-150 hover:cursor-pointer hover:bg-red-500'
-          onClick={onClickDelete}
-        />
       </div>
+
+      {assertions.isPath(selected) && (
+        <div className='p-1'>
+          <div className='grid grid-cols-9 items-center gap-2 text-center text-lg'>
+            <p className='col-span-2'>Command</p>
+            <p>X</p>
+            <p>Y</p>
+            <p>H1 X</p>
+            <p>H1 Y</p>
+            <p>H2 X</p>
+            <p>H2 Y</p>
+            <p />
+
+            {selected.points.map((p) => (
+              <ConfigurationPathCommandRow
+                key={p.id}
+                pathId={selected.id}
+                data={p}
+                client={client}
+              />
+            ))}
+          </div>
+
+          <Button
+            className='mt-2'
+            text='Add Path'
+            onClick={elementOperations.onClickAddPathCommand}
+          />
+        </div>
+      )}
     </section>
   )
 }
