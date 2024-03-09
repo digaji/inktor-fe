@@ -85,7 +85,7 @@ const Toolbar: FC<Toolbar> = ({
 
   return (
     <>
-      <div className='toolbar absolute left-3 flex h-toolbar w-12 flex-col gap-2 rounded-md bg-white p-2 shadow-toolbar'>
+      <div className='absolute left-3 top-1/3 flex h-auto w-12 flex-col gap-2 rounded-md bg-white p-2 shadow-toolbar'>
         <ToolbarButton
           content={<IcAdd />}
           onClick={onClickAdd}
