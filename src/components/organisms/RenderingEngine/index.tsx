@@ -33,11 +33,12 @@ class RenderingEngine {
   renderPropbarCallback: () => void
   selected: Circle | Rectangle | Path | undefined
 
+  logic: string
   crdtClient: CrdtClient
 
   static resizeHandleScreenSize: number = 6
 
-  constructor() {
+  constructor(logic: string) {
     this.screenWidth = 0
     this.screenHeight = 0
     this.screenScale = 1
@@ -86,7 +87,8 @@ class RenderingEngine {
 
     this.renderPropbarCallback = () => {}
 
-    this.crdtClient = new CrdtClient()
+    this.logic = logic
+    this.crdtClient = new CrdtClient(this.logic)
     this.crdtClient.setRender(
       () => {
         const tree = this.crdtClient.children()

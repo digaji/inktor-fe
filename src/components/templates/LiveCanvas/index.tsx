@@ -1,10 +1,12 @@
 import { useCallback, useState } from 'react'
+import { useLocalStorage } from 'usehooks-ts'
 
 import Circle from '@/components/atoms/Circle'
 import Path from '@/components/atoms/Path'
 import Rectangle from '@/components/atoms/Rectangle'
 import Canvas from '@/components/organisms/Canvas'
 import { MouseContext } from '@/components/organisms/Canvas/types'
+import Indicator from '@/components/organisms/Indicator'
 import PropertiesBar from '@/components/particles/PropertiesBar'
 import Settings from '@/components/particles/Settings'
 import Toolbar from '@/components/particles/Toolbar'
@@ -12,6 +14,9 @@ import { useAssertions } from '@/hooks/useAssertions'
 import useRenderingEngine from '@/hooks/useRenderingEngine'
 
 const LiveCanvas = () => {
+  const [showAddOptions, setShowAddOption] = useState(false)
+  const [logic, setLogic] = useLocalStorage('logic', 'WASM')
+
   const {
     draw,
     selected,
@@ -25,8 +30,7 @@ const LiveCanvas = () => {
     setNormalMode,
     setRenderPropbar,
     ...other
-  } = useRenderingEngine()
-  const [showAddOptions, setShowAddOption] = useState(false)
+  } = useRenderingEngine(logic)
   const assertions = useAssertions()
 
   const onClickAdd = useCallback(() => {
@@ -74,6 +78,8 @@ const LiveCanvas = () => {
 
   return (
     <main>
+      <Indicator logic={logic} />
+
       <Toolbar
         setNormalMode={setNormalMode}
         setResizeMode={setResizeMode}
@@ -84,7 +90,12 @@ const LiveCanvas = () => {
         showAddOptions={showAddOptions}
       />
 
-      <Settings propBarVisible={!!element} />
+      <Settings
+        propBarVisible={!!element}
+        logic={logic}
+        setLogic={setLogic}
+        client={client}
+      />
 
       {element && (
         <PropertiesBar

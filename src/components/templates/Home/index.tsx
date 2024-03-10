@@ -1,7 +1,8 @@
-import Button from '@/components/atoms/Button'
-import Input from '@/components/atoms/Input'
 import { FC, useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+
+import Button from '@/components/atoms/Button'
+import Input from '@/components/atoms/Input'
 
 const Home: FC = () => {
   const [roomId, setRoomId] = useState('')

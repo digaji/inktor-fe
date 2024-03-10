@@ -4,27 +4,34 @@ import { FC, Fragment, useState } from 'react'
 import IcGear from '@/assets/icons/ic-gear.svg?react'
 import Button from '@/components/atoms/Button'
 import Toggle from '@/components/atoms/Toggle'
+import CrdtClient from '@/components/organisms/Crdt'
 import clsxm from '@/utils/clsxm'
 
 interface Settings {
   propBarVisible: boolean
+  logic: string
+  setLogic: React.Dispatch<React.SetStateAction<string>>
+  client: CrdtClient
 }
 
-const Settings: FC<Settings> = ({ propBarVisible }) => {
+const Settings: FC<Settings> = ({ propBarVisible, logic, setLogic, client }) => {
+  const WASM = 'WASM'
+  const JS = 'JS'
+
   const [isOpen, setIsOpen] = useState(false)
-  const [logic, setLogic] = useState('WASM')
-  const [enabled, setEnabled] = useState(logic === 'WASM')
+  const [enabled, setEnabled] = useState(logic === WASM)
 
   const handleToggle = () => {
     const newState = !enabled
     setEnabled(newState)
 
     if (newState) {
-      setLogic('WASM')
+      setLogic(WASM)
+      client.setSvgDoc(WASM)
     } else {
-      setLogic('JS')
+      setLogic(JS)
+      client.setSvgDoc(JS)
     }
-    console.log(logic)
   }
 
   const closeModal = () => {
@@ -93,9 +100,7 @@ const Settings: FC<Settings> = ({ propBarVisible }) => {
                     Settings
                   </Dialog.Title>
 
-                  <div className=''>
-                    <p className='text-lg text-gray-500'>Wasm or JS</p>
-                  </div>
+                  <p className='text-lg text-gray-500'>Wasm or JS</p>
 
                   <div className='py-2'>
                     <Toggle
@@ -104,12 +109,10 @@ const Settings: FC<Settings> = ({ propBarVisible }) => {
                     />
                   </div>
 
-                  <div className=''>
-                    <Button
-                      text={'Close'}
-                      onClick={closeModal}
-                    />
-                  </div>
+                  <Button
+                    text={'Close'}
+                    onClick={closeModal}
+                  />
                 </Dialog.Panel>
               </Transition.Child>
             </div>

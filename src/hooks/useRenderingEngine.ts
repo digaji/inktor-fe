@@ -5,17 +5,17 @@ import RenderingEngine from '@/components/organisms/RenderingEngine'
 
 let engine: RenderingEngine | null = null
 
-const getRenderingEngine = () => {
+const getRenderingEngine = (logic: string) => {
   if (engine === null) {
-    engine = new RenderingEngine()
+    engine = new RenderingEngine(logic)
     return engine
   }
 
   return engine
 }
 
-const useRenderingEngine = () => {
-  const renderingEngine = useRef(getRenderingEngine())
+const useRenderingEngine = (logic: string) => {
+  const renderingEngine = useRef(getRenderingEngine(logic))
   const [selected, setSelected] = useState(renderingEngine.current.selected)
 
   const onMouseMove = useCallback((ctx: MouseContext) => {
