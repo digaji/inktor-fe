@@ -65,8 +65,8 @@ class Rectangle {
   onMouseMove(mousePos: Vec2) {
     if (this.engineContext.isResizing(this.id)) {
       const diff = mousePos.sub(this.pos)
-      const newHeight = diff.y()
-      const newWidth = diff.x()
+      const newHeight = Math.floor(diff.y())
+      const newWidth = Math.floor(diff.x())
       this.crdtClient.editRectangle(this.id, { height: newHeight, width: newWidth })
       return true
     }
