@@ -60,6 +60,7 @@ const useRenderingEngine = (logic: string) => {
   }, [])
 
   const client = renderingEngine.current.crdtClient
+  const context = renderingEngine.current.context
 
   const setRenderPropbar = useCallback((renderPropbar: () => void) => {
     renderingEngine.current.setRenderPropbar(renderPropbar)
@@ -69,6 +70,7 @@ const useRenderingEngine = (logic: string) => {
     draw,
     selected,
     client,
+    context,
     onMouseMove,
     onMouseUp,
     onMouseDown,

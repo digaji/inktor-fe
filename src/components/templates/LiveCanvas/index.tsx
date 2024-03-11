@@ -21,6 +21,7 @@ const LiveCanvas = () => {
     draw,
     selected,
     client,
+    context,
     onMouseMove,
     onMouseDown,
     onMouseUp,
@@ -95,6 +96,7 @@ const LiveCanvas = () => {
         logic={logic}
         setLogic={setLogic}
         client={client}
+        context={context}
       />
 
       {element && (
