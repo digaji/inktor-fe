@@ -1,5 +1,5 @@
 import { Dialog } from '@headlessui/react'
-import { FC } from 'react'
+import { FC, useRef } from 'react'
 import { useState } from 'react'
 
 import Button from '@/components/atoms/Button'
@@ -19,6 +19,7 @@ interface Benchmark {
 const Benchmark: FC<Benchmark> = ({ client, context, closeSettings }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedPreset, setSelectedPreset] = useState('')
+  const initialFocusRef = useRef(null)
 
   const benchmarkClient = useBenchmark({ client, context })
 
@@ -28,8 +29,6 @@ const Benchmark: FC<Benchmark> = ({ client, context, closeSettings }) => {
 
   const closeModal = () => {
     setIsOpen(false)
-    closeSettings()
-
     setSelectedPreset('')
   }
 
@@ -47,6 +46,7 @@ const Benchmark: FC<Benchmark> = ({ client, context, closeSettings }) => {
         isOpen={isOpen}
         setIsOpen={setIsOpen}
         isWide={true}
+        initialFocusRef={initialFocusRef}
       >
         <Button
           text={'X'}
@@ -61,7 +61,12 @@ const Benchmark: FC<Benchmark> = ({ client, context, closeSettings }) => {
           Benchmark
         </Dialog.Title>
 
-        <p className='text-lg text-gray-500'>Presets</p>
+        <p
+          className='text-lg text-gray-500'
+          ref={initialFocusRef}
+        >
+          Presets
+        </p>
 
         <div className='flex justify-center gap-4'>
           {BenchmarkPresets.map((preset) => (
@@ -82,6 +87,7 @@ const Benchmark: FC<Benchmark> = ({ client, context, closeSettings }) => {
           onClick={() => {
             benchmarkClient.benchmarkPreset(selectedPreset as BenchmarkPresetType)
             closeModal()
+            closeSettings()
           }}
         />
 

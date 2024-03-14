@@ -8,10 +8,11 @@ interface DialogBox {
   isOpen: boolean
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
   isWide?: boolean
+  initialFocusRef?: React.MutableRefObject<null>
   className?: string
 }
 
-const DialogBox: FC<DialogBox> = ({ children, isOpen, setIsOpen, isWide, className }) => {
+const DialogBox: FC<DialogBox> = ({ children, isOpen, setIsOpen, isWide, initialFocusRef, className }) => {
   const closeModal = () => {
     setIsOpen(false)
   }
@@ -24,6 +25,7 @@ const DialogBox: FC<DialogBox> = ({ children, isOpen, setIsOpen, isWide, classNa
     >
       <Dialog
         as='div'
+        initialFocus={initialFocusRef}
         className='relative z-10'
         onClose={closeModal}
       >
