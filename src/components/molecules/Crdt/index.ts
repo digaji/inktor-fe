@@ -17,7 +17,7 @@ import { SVGDoc as SVGDocRs } from '@inktor/inktor-crdt-rs'
 import Circle from '@/components/atoms/Circle'
 import Path from '@/components/atoms/Path'
 import Rectangle from '@/components/atoms/Rectangle'
-import { EngineContext } from '@/components/organisms/RenderingEngine/type'
+import { EngineContext } from '@/components/molecules/RenderingEngine/type'
 import { getClientId, getCrdtData, saveCrdtData } from '@/utils/storage'
 import PeerGroupClient from '@/webrtc'
 

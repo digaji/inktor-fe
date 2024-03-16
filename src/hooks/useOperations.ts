@@ -2,7 +2,7 @@ import { SVGPathCommandType } from '@inktor/inktor-crdt-rs'
 import { useCallback } from 'react'
 import { RgbaColor } from 'react-colorful'
 
-import CrdtClient from '@/components/organisms/Crdt'
+import CrdtClient from '@/components/molecules/Crdt'
 import { CustomSVGElement } from '@/types/elements'
 
 import { useAssertions } from './useAssertions'

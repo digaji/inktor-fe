@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 
-import { CanvasDraw, MouseContext, MouseWheel } from '@/components/organisms/Canvas/types'
-import RenderingEngine from '@/components/organisms/RenderingEngine'
+import { CanvasDraw, MouseContext, MouseWheel } from '@/components/molecules/Canvas/types'
+import RenderingEngine from '@/components/molecules/RenderingEngine'
 
 let engine: RenderingEngine | null = null
 

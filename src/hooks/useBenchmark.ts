@@ -1,8 +1,8 @@
 import Circle from '@/components/atoms/Circle'
 import Path from '@/components/atoms/Path'
 import Rectangle from '@/components/atoms/Rectangle'
-import CrdtClient, { convertUtility } from '@/components/organisms/Crdt'
-import { EngineContext } from '@/components/organisms/RenderingEngine/type'
+import CrdtClient, { convertUtility } from '@/components/molecules/Crdt'
+import { EngineContext } from '@/components/molecules/RenderingEngine/type'
 import {
   BenchmarkElementType,
   BenchmarkPresets,

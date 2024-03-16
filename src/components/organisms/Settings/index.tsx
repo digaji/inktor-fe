@@ -5,9 +5,9 @@ import IcGear from '@/assets/icons/ic-gear.svg?react'
 import Button from '@/components/atoms/Button'
 import DialogBox from '@/components/atoms/DialogBox'
 import Toggle from '@/components/atoms/Toggle'
-import CrdtClient from '@/components/organisms/Crdt'
-import { EngineContext } from '@/components/organisms/RenderingEngine/type'
-import Benchmark from '@/components/particles/Benchmark'
+import CrdtClient from '@/components/molecules/Crdt'
+import { EngineContext } from '@/components/molecules/RenderingEngine/type'
+import Benchmark from '@/components/organisms/Benchmark'
 import clsxm from '@/utils/clsxm'
 
 interface Settings {
