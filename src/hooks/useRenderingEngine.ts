@@ -1,21 +1,21 @@
 import { useCallback, useRef, useState } from 'react'
 
-import { CanvasDraw, MouseContext, MouseWheel } from '@/components/organisms/Canvas/types'
-import RenderingEngine from '@/components/organisms/RenderingEngine'
+import { CanvasDraw, MouseContext, MouseWheel } from '@/components/molecules/Canvas/types'
+import RenderingEngine from '@/components/molecules/RenderingEngine'
 
 let engine: RenderingEngine | null = null
 
-const getRenderingEngine = () => {
+const getRenderingEngine = (logic: string) => {
   if (engine === null) {
-    engine = new RenderingEngine()
+    engine = new RenderingEngine(logic)
     return engine
   }
 
   return engine
 }
 
-const useRenderingEngine = () => {
-  const renderingEngine = useRef(getRenderingEngine())
+const useRenderingEngine = (logic: string) => {
+  const renderingEngine = useRef(getRenderingEngine(logic))
   const [selected, setSelected] = useState(renderingEngine.current.selected)
 
   const onMouseMove = useCallback((ctx: MouseContext) => {
@@ -60,6 +60,7 @@ const useRenderingEngine = () => {
   }, [])
 
   const client = renderingEngine.current.crdtClient
+  const context = renderingEngine.current.context
 
   const setRenderPropbar = useCallback((renderPropbar: () => void) => {
     renderingEngine.current.setRenderPropbar(renderPropbar)
@@ -69,6 +70,7 @@ const useRenderingEngine = () => {
     draw,
     selected,
     client,
+    context,
     onMouseMove,
     onMouseUp,
     onMouseDown,

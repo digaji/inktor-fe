@@ -1,5 +1,5 @@
-import CrdtClient, { PathCommand, SVGColor } from '@/components/organisms/Crdt'
-import { EngineContext } from '@/components/organisms/RenderingEngine/type'
+import CrdtClient, { PathCommand, SVGColor } from '@/components/molecules/Crdt'
+import { EngineContext } from '@/components/molecules/RenderingEngine/type'
 import { Vec2 } from '@/utils/Vec2'
 
 class Path {

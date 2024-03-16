@@ -3,8 +3,8 @@ import { FC, useCallback } from 'react'
 import { z } from 'zod'
 
 import IcTrash from '@/assets/icons/ic-trash.svg?react'
-import ConfigInput from '@/components/organisms/ConfigInput'
-import CrdtClient from '@/components/organisms/Crdt'
+import ConfigInput from '@/components/molecules/ConfigInput'
+import CrdtClient from '@/components/molecules/Crdt'
 
 interface ConfigurationPathCommandRowProps {
   pathId: string

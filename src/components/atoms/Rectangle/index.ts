@@ -1,5 +1,5 @@
-import CrdtClient, { SVGColor } from '@/components/organisms/Crdt'
-import { EngineContext } from '@/components/organisms/RenderingEngine/type'
+import CrdtClient, { SVGColor } from '@/components/molecules/Crdt'
+import { EngineContext } from '@/components/molecules/RenderingEngine/type'
 import { Vec2 } from '@/utils/Vec2'
 
 class Rectangle {
@@ -65,8 +65,8 @@ class Rectangle {
   onMouseMove(mousePos: Vec2) {
     if (this.engineContext.isResizing(this.id)) {
       const diff = mousePos.sub(this.pos)
-      const newHeight = diff.y()
-      const newWidth = diff.x()
+      const newHeight = Math.floor(diff.y())
+      const newWidth = Math.floor(diff.x())
       this.crdtClient.editRectangle(this.id, { height: newHeight, width: newWidth })
       return true
     }

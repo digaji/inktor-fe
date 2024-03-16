@@ -1,10 +1,10 @@
+import { SVGDoc as SVGDocJs } from '@inktor/inktor-crdt-js'
 import {
   Color,
   PartialSVGCircle,
   PartialSVGPath,
   PartialSVGRectangle,
   SVGCircle,
-  SVGDoc,
   SVGDocTree,
   SVGPath,
   SVGPathCommand,
@@ -12,14 +12,14 @@ import {
   SVGRectangle,
   Vec2,
 } from '@inktor/inktor-crdt-rs'
+import { SVGDoc as SVGDocRs } from '@inktor/inktor-crdt-rs'
 
 import Circle from '@/components/atoms/Circle'
 import Path from '@/components/atoms/Path'
 import Rectangle from '@/components/atoms/Rectangle'
+import { EngineContext } from '@/components/molecules/RenderingEngine/type'
 import { getClientId, getCrdtData, saveCrdtData } from '@/utils/storage'
 import PeerGroupClient from '@/webrtc'
-
-import { EngineContext } from '../RenderingEngine/type'
 
 // What does the CRDT client do?
 //   When application first loads
@@ -40,20 +40,25 @@ export type PathCommand = SVGPathCommand
 export type SVGColor = Color
 
 class CrdtClient {
-  svgDoc: SVGDoc
+  svgDoc: SVGDocRs
   peerGroupClient: PeerGroupClient
   changeListener: () => void
   remoteChangeListener: () => void
   render: () => void
   groupId: string
-  constructor() {
-    this.svgDoc = SVGDoc.new(getClientId())
+  logic: string | null
+
+  constructor(logic: string | null) {
+    this.logic = logic
+    this.svgDoc = this.createSVGDoc(getClientId(), this.logic)
     this.changeListener = () => {
       this.onChange()
     }
+
     this.remoteChangeListener = () => {
       this.onChange(true)
     }
+
     this.render = () => {}
     const crdtData = getCrdtData()
     if (crdtData) this.svgDoc.load(crdtData)
@@ -65,6 +70,32 @@ class CrdtClient {
       if (!data) return ''
       return data
     })
+
+    this.peerGroupClient.setOnMessageReceived((message: string) => {
+      this.svgDoc.merge(message)
+      this.remoteChangeListener()
+    })
+  }
+
+  createSVGDoc(docId: string, logic: string | null) {
+    if (logic === 'WASM') {
+      return SVGDocRs.new(docId)
+    } else {
+      return SVGDocJs.new(docId)
+    }
+  }
+
+  setSvgDoc(logic: string | null) {
+    this.svgDoc = this.createSVGDoc(getClientId(), logic)
+
+    const crdtData = getCrdtData()
+    if (crdtData) this.svgDoc.load(crdtData)
+    this.peerGroupClient.setOnNewMembersSendMessage(() => {
+      const data = this.svgDoc.save()
+      if (!data) return ''
+      return data
+    })
+
     this.peerGroupClient.setOnMessageReceived((message: string) => {
       this.svgDoc.merge(message)
       this.remoteChangeListener()
@@ -76,6 +107,7 @@ class CrdtClient {
     if (crdtData) {
       saveCrdtData(crdtData)
     }
+
     if (!noBroadcast) {
       const message = this.svgDoc.broadcast()
       this.peerGroupClient.sendMessageToGroup(message)
@@ -92,6 +124,7 @@ class CrdtClient {
         renderToolbar()
       }
     }
+
     this.remoteChangeListener = () => {
       this.onChange(true)
       this.render()

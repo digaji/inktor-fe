@@ -4,8 +4,8 @@ import Circle from '@/components/atoms/Circle'
 import Grid from '@/components/atoms/Grid'
 import Path from '@/components/atoms/Path'
 import Rectangle from '@/components/atoms/Rectangle'
-import { MouseContext, MouseScroll, MouseWheel } from '@/components/organisms/Canvas/types'
-import CrdtClient, { convertUtility, PathCommand } from '@/components/organisms/Crdt'
+import { MouseContext, MouseScroll, MouseWheel } from '@/components/molecules/Canvas/types'
+import CrdtClient, { convertUtility, PathCommand } from '@/components/molecules/Crdt'
 import rgbaToHex from '@/utils/rgbaToHex'
 import { Vec2 } from '@/utils/Vec2'
 
@@ -33,11 +33,12 @@ class RenderingEngine {
   renderPropbarCallback: () => void
   selected: Circle | Rectangle | Path | undefined
 
+  logic: string
   crdtClient: CrdtClient
 
   static resizeHandleScreenSize: number = 6
 
-  constructor() {
+  constructor(logic: string) {
     this.screenWidth = 0
     this.screenHeight = 0
     this.screenScale = 1
@@ -86,7 +87,8 @@ class RenderingEngine {
 
     this.renderPropbarCallback = () => {}
 
-    this.crdtClient = new CrdtClient()
+    this.logic = logic
+    this.crdtClient = new CrdtClient(this.logic)
     this.crdtClient.setRender(
       () => {
         const tree = this.crdtClient.children()

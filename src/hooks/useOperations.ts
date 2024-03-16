@@ -2,7 +2,7 @@ import { SVGPathCommandType } from '@inktor/inktor-crdt-rs'
 import { useCallback } from 'react'
 import { RgbaColor } from 'react-colorful'
 
-import CrdtClient from '@/components/organisms/Crdt'
+import CrdtClient from '@/components/molecules/Crdt'
 import { CustomSVGElement } from '@/types/elements'
 
 import { useAssertions } from './useAssertions'
@@ -36,7 +36,7 @@ export const useOperations = ({ client, selected }: UseOperations) => {
 
       if (assertions.isCircle(selected) || assertions.isRect(selected)) {
         const pos = structuredClone(selected.pos)
-        pos.x = x
+        pos.x = Math.floor(x)
 
         switch (true) {
           case assertions.isCircle(selected):
@@ -59,7 +59,7 @@ export const useOperations = ({ client, selected }: UseOperations) => {
 
       if (assertions.isCircle(selected) || assertions.isRect(selected)) {
         const pos = structuredClone(selected.pos)
-        pos.y = y
+        pos.y = Math.floor(y)
 
         switch (true) {
           case assertions.isCircle(selected):
@@ -75,7 +75,7 @@ export const useOperations = ({ client, selected }: UseOperations) => {
 
   const onChangeRadius = useCallback(
     (s: string) => {
-      const radius = parseInt(s)
+      const radius = Math.floor(parseInt(s))
 
       if (selected === undefined) return
       if (Number.isNaN(radius)) return
@@ -87,7 +87,7 @@ export const useOperations = ({ client, selected }: UseOperations) => {
 
   const onChangeWidth = useCallback(
     (s: string) => {
-      const width = parseInt(s)
+      const width = Math.floor(parseInt(s))
 
       if (Number.isNaN(width)) return
       if (selected === undefined) return
@@ -99,7 +99,7 @@ export const useOperations = ({ client, selected }: UseOperations) => {
 
   const onChangeHeight = useCallback(
     (s: string) => {
-      const height = parseInt(s)
+      const height = Math.floor(parseInt(s))
 
       if (Number.isNaN(height)) return
       if (selected === undefined) return
@@ -115,7 +115,7 @@ export const useOperations = ({ client, selected }: UseOperations) => {
 
   const onChangeStrokeWidth = useCallback(
     (s: string) => {
-      const strokeWidth = parseInt(s)
+      const strokeWidth = Math.floor(parseInt(s))
 
       if (selected === undefined) return
       if (Number.isNaN(strokeWidth)) return
