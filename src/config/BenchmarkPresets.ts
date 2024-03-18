@@ -1,10 +1,9 @@
 import { Color, SVGPathCommandType } from '@inktor/inktor-crdt-rs'
 
 export enum BenchmarkPresetType {
-  S = 'S',
-  M = 'M',
-  L = 'L',
-  XL = 'XL',
+  S = 'Scenario 1',
+  M = 'Scenario 2',
+  L = 'Scenario 3',
 }
 
 export enum BenchmarkElementType {
