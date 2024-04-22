@@ -31,7 +31,7 @@ class PeerGroupClient {
   peerClient: Peer
   roomId: string | null
   peerId: string | null
-  pollRoomIntervalId: number
+  pollRoomIntervalId: NodeJS.Timeout | null
   memberIds: Map<MemberID, ConnectionID>
   onMessageReceived: (message: string) => void
   onNewMembersSendMessage?: () => string
@@ -40,7 +40,7 @@ class PeerGroupClient {
     this.memberIds = new Map()
     this.peerId = null
     this.roomId = null
-    this.pollRoomIntervalId = 0
+    this.pollRoomIntervalId = null
 
     this.onMessageReceived = () => {}
     this.peerClient = getPeerClient()
@@ -74,7 +74,9 @@ class PeerGroupClient {
 
     this.roomId = groupId
     await joinRoom(this.peerId, groupId)
-    clearInterval(this.pollRoomIntervalId)
+    if (this.pollRoomIntervalId) {
+      clearInterval(this.pollRoomIntervalId)
+    }
 
     this.pollRoomIntervalId = setInterval(async () => {
       if (!this.roomId) return

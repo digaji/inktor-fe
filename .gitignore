@@ -131,6 +131,7 @@ dist
 
 # WASM test pkg
 pkg
+pkg_js
 
 # Mac
 .DS_Store
