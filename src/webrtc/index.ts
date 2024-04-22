@@ -14,8 +14,10 @@ const getPeerClient = () => {
     const port = import.meta.env.VITE_SIGNALING_SERVER_PORT
     const path = import.meta.env.VITE_SIGNALING_SERVER_PEERJS_PATH
     const key = import.meta.env.VITE_SIGNALING_SERVER_PEERJS_KEY
+    const scheme = import.meta.env.VITE_SIGNALING_SERVER_SCHEME
 
     peerClient = new Peer({
+      secure: scheme === 'https',
       host,
       port,
       path,
