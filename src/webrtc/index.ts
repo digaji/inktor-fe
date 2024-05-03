@@ -41,7 +41,7 @@ class PeerGroupClient {
   onMessageReceived: (message: string) => void
   onNewMembersSendMessage?: () => string
 
-  constructor(groupId?: string) {
+  constructor(getGroupId?: () => string | null) {
     this.memberIds = new Map()
     this.peerId = null
     this.roomId = null
@@ -60,8 +60,8 @@ class PeerGroupClient {
 
       this.peerId = id
 
-      if (groupId) {
-        this.joinGroup(groupId)
+      if (getGroupId) {
+        this.joinGroup(getGroupId)
       }
     })
   }
@@ -74,18 +74,20 @@ class PeerGroupClient {
     this.onMessageReceived = onMessageReceived
   }
 
-  async joinGroup(groupId: string) {
+  async joinGroup(getGroupId: () => string | null) {
     if (!this.peerId) return
+    const peerId = this.peerId
 
-    this.roomId = groupId
-    await joinRoom(this.peerId, groupId)
     if (this.pollRoomIntervalId) {
       clearInterval(this.pollRoomIntervalId)
     }
 
     this.pollRoomIntervalId = setInterval(async () => {
-      if (!this.roomId) return
-
+      this.roomId = getGroupId()
+      if (!this.roomId) {
+        return
+      }
+      await joinRoom(peerId, this.roomId)
       const newMemberIds = await roomMembers(this.roomId)
       const diff = newMemberIds.filter((it) => !this.memberIds.has(it) && it !== this.peerId)
 

@@ -5,6 +5,7 @@ import {
   PartialSVGPath,
   PartialSVGRectangle,
   SVGCircle,
+  SVGDoc as SVGDocRs,
   SVGDocTree,
   SVGPath,
   SVGPathCommand,
@@ -12,7 +13,6 @@ import {
   SVGRectangle,
   Vec2,
 } from '@inktor/inktor-crdt-rs'
-import { SVGDoc as SVGDocRs } from '@inktor/inktor-crdt-rs'
 
 import Circle from '@/components/atoms/Circle'
 import Path from '@/components/atoms/Path'
@@ -64,7 +64,7 @@ class CrdtClient {
     if (crdtData) this.svgDoc.load(crdtData)
 
     this.groupId = location.pathname.substring(1)
-    this.peerGroupClient = new PeerGroupClient(this.groupId)
+    this.peerGroupClient = new PeerGroupClient(() => location.pathname.substring(1))
     this.peerGroupClient.setOnNewMembersSendMessage(() => {
       const data = this.svgDoc.save()
       if (!data) return ''
