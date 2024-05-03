@@ -23,6 +23,7 @@ const getPeerClient = () => {
       path,
       key,
       config: {
+        // Custom STUN/TURN servers help when connecting when a client is behind a NAT
         iceServers: [{ url: 'turn:peer.inktor.bghiffar.com:3478', username: 'user01', credential: 'pass01' }],
         sdpSemantics: 'unified-plan',
       },
@@ -48,9 +49,13 @@ class PeerGroupClient {
     this.pollRoomIntervalId = null
 
     this.onMessageReceived = () => {}
+
+    // open a connection to the peerjs server
     this.peerClient = getPeerClient()
     this.peerClient.on('open', (id) => {
+      // Define for every connection from different clients
       this.peerClient.on('connection', (conn) => {
+        // when we receive data from another client, call the oneMessageReceived handler
         conn.on('data', (data) => {
           const res = z.string().safeParse(data)
           if (!res.success) return
@@ -58,6 +63,7 @@ class PeerGroupClient {
         })
       })
 
+      // When the connection is open save the peer id
       this.peerId = id
 
       if (getGroupId) {
@@ -78,19 +84,30 @@ class PeerGroupClient {
     if (!this.peerId) return
     const peerId = this.peerId
 
+    // clear polling from previous join group.
     if (this.pollRoomIntervalId) {
       clearInterval(this.pollRoomIntervalId)
     }
 
+    // room member polling, makesure client is connected to all other clients
+    // in the same room
     this.pollRoomIntervalId = setInterval(async () => {
       this.roomId = getGroupId()
       if (!this.roomId) {
         return
       }
+
+      // hit join room endpoint in peer server
       await joinRoom(peerId, this.roomId)
+
+      // get room members of current room
       const newMemberIds = await roomMembers(this.roomId)
+
+      // diff is members that previously weren't in the room that we are in.
+      // This could be because we changed rooms or new users are joining the room we are in.
       const diff = newMemberIds.filter((it) => !this.memberIds.has(it) && it !== this.peerId)
 
+      // open a new webrtc connection to new clients in our room
       for (const newMember of diff) {
         const conn = this.peerClient.connect(newMember)
         const opening = new Promise<null>((resolve, _) => conn.on('open', () => resolve(null)))
@@ -99,14 +116,16 @@ class PeerGroupClient {
         this.memberIds.set(newMember, conn.connectionId)
       }
 
+      // remove old webrtc connections to clients no longer in the same room
       const oldMemberIds = this.memberIds.keys()
-
       for (const oldMemberId of oldMemberIds) {
         if (!newMemberIds.includes(oldMemberId)) {
           this.memberIds.delete(oldMemberId)
         }
       }
 
+      // if there are new clients in our room, we want to send the current state of
+      // our document to them
       if (diff.length > 0) {
         // broadcast changes to all
         if (!this.onNewMembersSendMessage) return
