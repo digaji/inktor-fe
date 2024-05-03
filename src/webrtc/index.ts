@@ -22,7 +22,9 @@ const getPeerClient = () => {
       port,
       path,
       key,
-      config: {},
+      config: {
+        iceServers: [{ url: 'turn:peer.inktor.bghiffar.com:5349', username: 'user01', credential: 'pass01' }],
+      },
     })
     return peerClient
   }
