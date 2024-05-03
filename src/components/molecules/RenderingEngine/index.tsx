@@ -241,13 +241,15 @@ class RenderingEngine {
         if (typeof stroke.color === 'string') {
           ctx.strokeStyle = stroke.color
         } else {
-          ctx.strokeStyle = rgbaToHex(stroke.color)
+          const strokeColor: Color = [...stroke.color]
+          strokeColor[3] *= data.opacity
+          ctx.strokeStyle = rgbaToHex(strokeColor)
         }
         ctx.lineWidth = stroke.width
       }
 
-      const fill = data.fill
-      fill[fill.length - 1] = data.opacity
+      const fill: Color = [...data.fill]
+      fill[3] *= data.opacity
 
       ctx.fillStyle = rgbaToHex(fill)
 
@@ -260,7 +262,7 @@ class RenderingEngine {
         ctx.shadowBlur = 0
       }
 
-      if (stroke) {
+      if (stroke && stroke.width > 0) {
         ctx.stroke()
       }
     }
@@ -287,13 +289,15 @@ class RenderingEngine {
         if (typeof stroke.color === 'string') {
           ctx.strokeStyle = stroke.color
         } else {
-          ctx.strokeStyle = rgbaToHex(stroke.color)
+          const strokeColor: Color = [...stroke.color]
+          strokeColor[3] *= data.opacity
+          ctx.strokeStyle = rgbaToHex(strokeColor)
         }
         ctx.lineWidth = stroke.width
       }
 
-      const fill = data.fill
-      fill[fill.length - 1] = data.opacity
+      const fill: Color = [...data.fill]
+      fill[3] *= data.opacity
 
       ctx.fillStyle = rgbaToHex(fill)
 
@@ -301,7 +305,7 @@ class RenderingEngine {
       ctx.rect(data.x, data.y, data.width, data.height)
       ctx.fill()
 
-      if (stroke) {
+      if (stroke && stroke.width > 0) {
         ctx.stroke()
       }
     }
@@ -668,7 +672,7 @@ class RenderingEngine {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
     this.renderGrid(this.grid, ctx)
 
-    for (let i = this.objects.length - 1; i >= 0; i--) {
+    for (let i = 0; i < this.objects.length; i++) {
       const object = this.objects[i]
 
       if (object instanceof Circle) {

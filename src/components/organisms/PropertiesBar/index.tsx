@@ -1,11 +1,10 @@
 import { SVGCircle, SVGPath, SVGRectangle } from '@inktor/inktor-crdt-rs'
+import { ColorPicker, InputNumber } from 'antd'
 import { FC } from 'react'
-import { RgbaColorPicker } from 'react-colorful'
 
 import IcTrash from '@/assets/icons/ic-trash.svg?react'
 import Button from '@/components/atoms/Button'
 import Circle from '@/components/atoms/Circle'
-import ColorPicker from '@/components/atoms/ColorPicker'
 import Path from '@/components/atoms/Path'
 import Rectangle from '@/components/atoms/Rectangle'
 import ConfigurationPathCommandRow from '@/components/molecules/ConfigurationPathCommandRow'
@@ -14,7 +13,6 @@ import { useAssertions } from '@/hooks/useAssertions'
 import { useColorPicker } from '@/hooks/useColorPicker'
 import { useOperations } from '@/hooks/useOperations'
 import clsxm from '@/utils/clsxm'
-import rgbaToHex from '@/utils/rgbaToHex'
 
 interface PropertiesBar {
   client: CrdtClient
@@ -42,7 +40,7 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
   return (
     <section
       className={clsxm(
-        'absolute right-0 flex h-screen w-80 flex-col gap-2 divide-y-2 border-l-2 border-black bg-white p-2 transition-all duration-150',
+        'absolute right-0 flex h-screen w-80 flex-col gap-2 border-l-2 border-gray-200 bg-white p-2 transition-all duration-150',
         assertions.isPath(selected) && 'w-5/12'
       )}
       onClick={() => {
@@ -51,7 +49,7 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
       }}
     >
       <div className='flex justify-between p-1'>
-        <h1 className='text-3xl'>{selectedType}</h1>
+        <h1 className='text-lg text-gray-600'>{selectedType}</h1>
 
         <IcTrash
           className='h-9 w-9 rounded-md p-1 transition-all duration-150 hover:cursor-pointer hover:bg-red-500'
@@ -60,40 +58,49 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
       </div>
 
       {(assertions.isCircle(selected) || assertions.isRect(selected)) && (
-        <>
-          <div className='flex justify-between p-1'>
-            <label className='text-lg'>X: {selected.pos.x}</label>
-
-            <input
-              min={-100}
-              max={100}
+        <div className='flex justify-between px-2'>
+          <div className='flex gap-2 p-1'>
+            <InputNumber
+              addonBefore='X'
               value={selected.pos.x}
-              type='range'
-              onChange={(e) => elementOperations.onChangeX(e.target.value)}
+              type='number'
+              size='small'
+              onChange={(val) => val && elementOperations.onChangeX(val.toString())}
+              changeOnWheel
+              stringMode
             />
           </div>
-
-          <div className='flex justify-between p-1'>
-            <label className='text-lg'>Y: {selected.pos.y}</label>
-
-            <input
-              min={-100}
-              max={100}
+          <div className='flex items-center gap-2 p-1'>
+            {/* <label className='flex aspect-square h-full items-center justify-center text-sm text-gray-600'>Y</label> */}
+            <InputNumber
+              addonBefore='Y'
               value={selected.pos.y}
-              type='range'
-              onChange={(e) => {
-                elementOperations.onChangeY(e.target.value)
-              }}
+              type='number'
+              size='small'
+              onChange={(val) => val && elementOperations.onChangeY(val.toString())}
+              changeOnWheel
+              stringMode
             />
           </div>
-        </>
+        </div>
       )}
 
       {assertions.isCircle(selected) && (
-        <div className='flex justify-between p-1'>
-          <label className='text-lg'>Radius: {selected.radius}</label>
+        <div className='flex justify-between p-1 px-3'>
+          {/* <label className='text-lg'>R</label> */}
 
-          <input
+          <InputNumber
+            addonBefore='R'
+            value={selected.radius}
+            type='number'
+            size='small'
+            onChange={(val) => val && elementOperations.onChangeRadius(val.toString())}
+            changeOnWheel
+            stringMode
+            min={0}
+            className='w-full'
+          />
+          {/* <input
             min={0}
             max={150}
             value={selected.radius}
@@ -101,72 +108,120 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
             onChange={(e) => {
               elementOperations.onChangeRadius(e.target.value)
             }}
-          />
+          /> */}
         </div>
       )}
 
       {assertions.isRect(selected) && (
-        <>
-          <div className='flex justify-between p-1'>
-            <label className='text-lg'>Width: {selected.width}</label>
-
-            <input
-              min={0}
-              max={500}
+        <div className='flex justify-between px-2'>
+          <div className='flex items-center gap-2 p-1'>
+            {/* <label className='flex aspect-square h-full items-center justify-center text-sm text-gray-600'>W</label> */}
+            <InputNumber
+              addonBefore='W'
               value={selected.width}
-              type='range'
-              onChange={(e) => {
-                elementOperations.onChangeWidth(e.target.value)
-              }}
-            />
-          </div>
-          <div className='flex justify-between p-1'>
-            <label className='text-lg'>Height: {selected.height}</label>
-
-            <input
+              type='number'
+              size='small'
+              onChange={(val) => val && elementOperations.onChangeWidth(val.toString())}
+              changeOnWheel
+              stringMode
               min={0}
-              max={500}
-              value={selected.height}
-              type='range'
-              onChange={(e) => {
-                elementOperations.onChangeHeight(e.target.value)
-              }}
             />
           </div>
-        </>
+          <div className='flex items-center gap-2 p-1'>
+            {/* <label className='flex aspect-square h-full items-center justify-center text-sm text-gray-600'>H</label> */}
+            <InputNumber
+              addonBefore='H'
+              value={selected.height}
+              type='number'
+              size='small'
+              onChange={(val) => val && elementOperations.onChangeHeight(val.toString())}
+              changeOnWheel
+              stringMode
+              min={0}
+            />
+          </div>
+        </div>
       )}
 
-      <div className='flex justify-between p-1'>
-        <label className='text-lg'>Stroke Width: {selected.stroke_width}</label>
+      <div className='flex justify-between px-2'>
+        <div className='flex items-center gap-2 p-1'>
+          {/* <div className='flex aspect-square h-full items-center justify-center text-sm text-gray-600'>
+            <img
+              src='/strokewidthicon.svg'
+              alt='stroke width icon'
+              className='h-5 w-5'
+            />
+          </div> */}
 
-        <input
-          min={0}
-          max={150}
-          value={selected.stroke_width}
-          type='range'
-          onChange={(e) => {
-            elementOperations.onChangeStrokeWidth(e.target.value)
+          <InputNumber
+            addonBefore={
+              <div className='h-4 w-4'>
+                <img
+                  src='/strokewidthicon.svg'
+                  alt='stroke width icon'
+                  className='h-full'
+                />
+              </div>
+            }
+            value={selected.stroke_width}
+            type='number'
+            size='small'
+            onChange={(val) => val && elementOperations.onChangeStrokeWidth(val.toString())}
+            changeOnWheel
+            stringMode
+            min={0}
+          />
+        </div>
+        <div className='flex items-center gap-2 p-1'>
+          {/* <label className='flex aspect-square h-full items-center justify-center text-sm text-gray-600'>O</label> */}
+          <InputNumber
+            addonBefore={
+              <div className='h-4 w-4'>
+                <img
+                  src='/opacity.svg'
+                  alt='opacity icon'
+                  className='h-full'
+                />
+              </div>
+            }
+            value={selected.opacity}
+            type='number'
+            size='small'
+            onChange={(val) => val && elementOperations.onChangeOpacity(val.toString())}
+            changeOnWheel
+            stringMode
+            step={0.01}
+            min={0}
+            max={1}
+          />
+          {/* <input
+            min={0}
+            max={1}
+            step={0.01}
+            type='range'
+            value={selected.opacity}
+            onChange={(e) => {
+              elementOperations.onChangeOpacity(e.target.value)
+            }}
+          /> */}
+        </div>
+      </div>
+      <div className='flex flex-col gap-3 p-1 px-3'>
+        <ColorPicker
+          showText={(color) => <span>Fill: {color.toHexString()}</span>}
+          value={`rgba(${fillRed}, ${fillGreen}, ${fillBlue}, ${fillOpacity})`}
+          onChange={(c) => {
+            elementOperations.onChangeFill(c.toRgb())
           }}
         />
-      </div>
-
-      <div className='flex justify-between p-1'>
-        <label className='text-lg'>Opacity: {selected.opacity}</label>
-
-        <input
-          min={0}
-          max={1}
-          step={0.01}
-          type='range'
-          value={selected.opacity}
-          onChange={(e) => {
-            elementOperations.onChangeOpacity(e.target.value)
+        <ColorPicker
+          showText={(color) => <span>Stroke: {color.toHexString()}</span>}
+          value={`rgba(${strokeRed}, ${strokeGreen}, ${strokeBlue}, ${strokeOpacity})`}
+          onChange={(c) => {
+            elementOperations.onChangeStroke(c.toRgb())
           }}
         />
-      </div>
-
-      <div className='flex flex-col gap-1 p-1'>
-        <label className='text-lg'>Fill: {rgbaToHex(selected.fill)}</label>
+        {/* <label className='text-lg'>Fill: {rgbaToHex(selected.fill)}</label>
 
         <ColorPicker
           pickerColor={selected.fill}
@@ -182,11 +237,11 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
               color={{ r: fillRed, g: fillGreen, b: fillBlue, a: fillOpacity }}
             />
           )}
-        </ColorPicker>
+        </ColorPicker> */}
       </div>
 
       <div className='flex flex-col gap-1 p-1'>
-        <label className='text-lg'>Stroke: {rgbaToHex(selected.stroke)}</label>
+        {/* <label className='text-lg'>Stroke: {rgbaToHex(selected.stroke)}</label>
 
         <ColorPicker
           pickerColor={selected.stroke}
@@ -202,7 +257,7 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
               color={{ r: strokeRed, g: strokeGreen, b: strokeBlue, a: strokeOpacity }}
             />
           )}
-        </ColorPicker>
+        </ColorPicker> */}
       </div>
 
       {assertions.isPath(selected) && (

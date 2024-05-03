@@ -148,7 +148,7 @@ class PeerGroupClient {
       if (!('send' in conn)) continue
 
       try {
-        await conn.send(message)
+        conn.send(message)
       } catch (err) {
         continue
       }
