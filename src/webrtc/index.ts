@@ -23,7 +23,7 @@ const getPeerClient = () => {
       path,
       key,
       config: {
-        iceServers: [{ url: 'turn:peer.inktor.bghiffar.com:5349', username: 'user01', credential: 'pass01' }],
+        iceServers: [{ url: 'turn:peer.inktor.bghiffar.com:3478', username: 'user01', credential: 'pass01' }],
         sdpSemantics: 'unified-plan',
       },
     })
