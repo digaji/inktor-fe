@@ -103,7 +103,7 @@ const Canvas: FC<CanvasProps> = (props) => {
           onMouseWheel({ scroll: MouseScroll.SCROLL_DOWN })
         }
       }
-      canvas.addEventListener('wheel', listener)
+      canvas.addEventListener('wheel', listener, { passive: true, capture: true })
       return () => {
         canvas.removeEventListener('wheel', listener)
       }

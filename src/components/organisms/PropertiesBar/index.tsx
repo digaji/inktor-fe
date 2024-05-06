@@ -3,11 +3,9 @@ import { ColorPicker, InputNumber } from 'antd'
 import { FC } from 'react'
 
 import IcTrash from '@/assets/icons/ic-trash.svg?react'
-import Button from '@/components/atoms/Button'
 import Circle from '@/components/atoms/Circle'
 import Path from '@/components/atoms/Path'
 import Rectangle from '@/components/atoms/Rectangle'
-import ConfigurationPathCommandRow from '@/components/molecules/ConfigurationPathCommandRow'
 import CrdtClient from '@/components/molecules/Crdt'
 import { useAssertions } from '@/hooks/useAssertions'
 import { useColorPicker } from '@/hooks/useColorPicker'
@@ -40,8 +38,8 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
   return (
     <section
       className={clsxm(
-        'absolute right-0 flex h-screen w-80 flex-col gap-2 border-l-2 border-gray-200 bg-white p-2 transition-all duration-150',
-        assertions.isPath(selected) && 'w-5/12'
+        'absolute right-0 flex h-screen w-80 flex-col gap-2 border-l-2 border-gray-200 bg-white p-2 transition-all duration-150'
+        // assertions.isPath(selected) && 'w-5/12'
       )}
       onClick={() => {
         fillPicker.hideColorPicker()
@@ -71,7 +69,6 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
             />
           </div>
           <div className='flex items-center gap-2 p-1'>
-            {/* <label className='flex aspect-square h-full items-center justify-center text-sm text-gray-600'>Y</label> */}
             <InputNumber
               addonBefore='Y'
               value={selected.pos.y}
@@ -87,8 +84,6 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
 
       {assertions.isCircle(selected) && (
         <div className='flex justify-between p-1 px-3'>
-          {/* <label className='text-lg'>R</label> */}
-
           <InputNumber
             addonBefore='R'
             value={selected.radius}
@@ -100,22 +95,12 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
             min={0}
             className='w-full'
           />
-          {/* <input
-            min={0}
-            max={150}
-            value={selected.radius}
-            type='range'
-            onChange={(e) => {
-              elementOperations.onChangeRadius(e.target.value)
-            }}
-          /> */}
         </div>
       )}
 
       {assertions.isRect(selected) && (
         <div className='flex justify-between px-2'>
           <div className='flex items-center gap-2 p-1'>
-            {/* <label className='flex aspect-square h-full items-center justify-center text-sm text-gray-600'>W</label> */}
             <InputNumber
               addonBefore='W'
               value={selected.width}
@@ -128,7 +113,6 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
             />
           </div>
           <div className='flex items-center gap-2 p-1'>
-            {/* <label className='flex aspect-square h-full items-center justify-center text-sm text-gray-600'>H</label> */}
             <InputNumber
               addonBefore='H'
               value={selected.height}
@@ -145,14 +129,6 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
 
       <div className='flex justify-between px-2'>
         <div className='flex items-center gap-2 p-1'>
-          {/* <div className='flex aspect-square h-full items-center justify-center text-sm text-gray-600'>
-            <img
-              src='/strokewidthicon.svg'
-              alt='stroke width icon'
-              className='h-5 w-5'
-            />
-          </div> */}
-
           <InputNumber
             addonBefore={
               <div className='h-4 w-4'>
@@ -173,7 +149,6 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
           />
         </div>
         <div className='flex items-center gap-2 p-1'>
-          {/* <label className='flex aspect-square h-full items-center justify-center text-sm text-gray-600'>O</label> */}
           <InputNumber
             addonBefore={
               <div className='h-4 w-4'>
@@ -194,16 +169,6 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
             min={0}
             max={1}
           />
-          {/* <input
-            min={0}
-            max={1}
-            step={0.01}
-            type='range'
-            value={selected.opacity}
-            onChange={(e) => {
-              elementOperations.onChangeOpacity(e.target.value)
-            }}
-          /> */}
         </div>
       </div>
       <div className='flex flex-col gap-3 p-1 px-3'>
@@ -221,46 +186,8 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
             elementOperations.onChangeStroke(c.toRgb())
           }}
         />
-        {/* <label className='text-lg'>Fill: {rgbaToHex(selected.fill)}</label>
-
-        <ColorPicker
-          pickerColor={selected.fill}
-          onClick={() => {
-            fillPicker.toggleColorPicker()
-            strokePicker.hideColorPicker()
-          }}
-        >
-          {fillPicker.show && (
-            <RgbaColorPicker
-              style={{ position: 'absolute', zIndex: 5, left: '4em' }}
-              onChange={elementOperations.onChangeFill}
-              color={{ r: fillRed, g: fillGreen, b: fillBlue, a: fillOpacity }}
-            />
-          )}
-        </ColorPicker> */}
       </div>
-
-      <div className='flex flex-col gap-1 p-1'>
-        {/* <label className='text-lg'>Stroke: {rgbaToHex(selected.stroke)}</label>
-
-        <ColorPicker
-          pickerColor={selected.stroke}
-          onClick={() => {
-            strokePicker.toggleColorPicker()
-            fillPicker.hideColorPicker()
-          }}
-        >
-          {strokePicker.show && (
-            <RgbaColorPicker
-              style={{ position: 'absolute', zIndex: 5, left: '4em' }}
-              onChange={elementOperations.onChangeStroke}
-              color={{ r: strokeRed, g: strokeGreen, b: strokeBlue, a: strokeOpacity }}
-            />
-          )}
-        </ColorPicker> */}
-      </div>
-
-      {assertions.isPath(selected) && (
+      {/* {assertions.isPath(selected) && (
         <div className='p-1'>
           <div className='grid grid-cols-9 items-center gap-2 text-center text-lg'>
             <p className='col-span-2'>Command</p>
@@ -288,7 +215,7 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
             onClick={elementOperations.onClickAddPathCommand}
           />
         </div>
-      )}
+      )} */}
     </section>
   )
 }
