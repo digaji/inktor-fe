@@ -264,7 +264,7 @@ class RenderingEngine {
     const [lines, handles] = derivePathHandles(adjustedPoints, (p) => this.canvasToScreen(p))
     const stroke = {
       color: path.stroke,
-      width: path.stroke_width,
+      width: path.stroke_width * this.screenScale,
     }
 
     renderSimple.path({
@@ -298,7 +298,7 @@ class RenderingEngine {
     const width = rectangle.width * this.screenScale
     const stroke = {
       color: rectangle.stroke,
-      width: rectangle.stroke_width,
+      width: rectangle.stroke_width * this.screenScale,
     }
     const opacity = rectangle.opacity
     const fill = rectangle.fill
@@ -321,7 +321,7 @@ class RenderingEngine {
     const r = circle.radius * this.screenScale
     const stroke = {
       color: circle.stroke,
-      width: circle.stroke_width,
+      width: circle.stroke_width * this.screenScale,
     }
     const opacity = circle.opacity
     const fill = circle.fill
