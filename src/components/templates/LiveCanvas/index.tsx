@@ -99,15 +99,13 @@ const LiveCanvas = () => {
         context={context}
       />
 
-      {element && (
-        <PropertiesBar
-          client={client}
-          selected={element}
-          setSelected={setSelected}
-          onClickDelete={onClickDelete}
-          setRenderPropbar={setRenderPropbar}
-        />
-      )}
+      <PropertiesBar
+        client={client}
+        selected={element}
+        setSelected={setSelected}
+        onClickDelete={onClickDelete}
+        setRenderPropbar={setRenderPropbar}
+      />
 
       <Canvas
         draw={draw}

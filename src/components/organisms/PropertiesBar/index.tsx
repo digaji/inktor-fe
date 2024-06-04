@@ -1,221 +1,90 @@
 import { SVGCircle, SVGPath, SVGRectangle } from '@inktor/inktor-crdt-rs'
-import { ColorPicker, InputNumber } from 'antd'
-import { FC } from 'react'
+import { FC, useCallback, useEffect, useState } from 'react'
 
-import IcTrash from '@/assets/icons/ic-trash.svg?react'
 import Circle from '@/components/atoms/Circle'
 import Path from '@/components/atoms/Path'
 import Rectangle from '@/components/atoms/Rectangle'
 import CrdtClient from '@/components/molecules/Crdt'
-import { useAssertions } from '@/hooks/useAssertions'
 import { useColorPicker } from '@/hooks/useColorPicker'
-import { useOperations } from '@/hooks/useOperations'
 import clsxm from '@/utils/clsxm'
 
+import ElementInfo from './ElementInfo'
+import LayersInfo from './LayersInfo'
+
+type SelectedItem = SVGCircle | SVGRectangle | SVGPath | undefined
 interface PropertiesBar {
   client: CrdtClient
-  selected: SVGCircle | SVGRectangle | SVGPath
+  selected: SelectedItem
   setSelected: React.Dispatch<React.SetStateAction<Circle | Rectangle | Path | undefined>>
   onClickDelete: () => void
   setRenderPropbar: (fn: () => void) => void
 }
 
+type PropertiesTabs = 'LAYERS' | 'ELEMENTS'
+
+const usePropertiesTabs = ({ selected }: { selected: SelectedItem }) => {
+  const [tab, setTab] = useState<PropertiesTabs>('ELEMENTS')
+  useEffect(() => {
+    if (selected === undefined) {
+      setTab('LAYERS')
+    }
+  }, [selected])
+  const onClickLayers = useCallback(() => {
+    setTab('LAYERS')
+  }, [])
+  const onClickElements = useCallback(() => {
+    setTab('ELEMENTS')
+  }, [])
+
+  const isLayers = tab === 'LAYERS'
+  const isElements = tab === 'ELEMENTS'
+
+  return { onClickElements, onClickLayers, isElements, isLayers }
+}
+
 const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onClickDelete, setRenderPropbar }) => {
+  const { onClickElements, onClickLayers, isElements, isLayers } = usePropertiesTabs({ selected })
   const fillPicker = useColorPicker()
   const strokePicker = useColorPicker()
 
-  const elementOperations = useOperations({ client, selected })
-  const selectedType = elementOperations.selectedType
-  const assertions = useAssertions()
-
-  const [fillRed, fillGreen, fillBlue, fillOpacity] = selected.fill
-  const [strokeRed, strokeGreen, strokeBlue, strokeOpacity] = selected.stroke
-
-  setRenderPropbar(() => {
-    setSelected(selected as Circle | Rectangle | Path)
-  })
+  console.log('Re render')
 
   return (
     <section
       className={clsxm(
-        'absolute right-0 flex h-screen w-80 flex-col gap-2 border-l-2 border-gray-200 bg-white p-2 transition-all duration-150'
-        // assertions.isPath(selected) && 'w-5/12'
+        'absolute right-0 flex h-screen w-80 flex-col gap-2 border-l-2 border-gray-200 bg-white transition-all duration-150'
       )}
       onClick={() => {
         fillPicker.hideColorPicker()
         strokePicker.hideColorPicker()
       }}
     >
-      <div className='flex justify-between p-1'>
-        <h1 className='text-lg text-gray-600'>{selectedType}</h1>
-
-        <IcTrash
-          className='h-9 w-9 rounded-md p-1 transition-all duration-150 hover:cursor-pointer hover:bg-red-500'
-          onClick={onClickDelete}
-        />
+      <div className='bg-[#e5e7eb]'>
+        {selected && (
+          <button
+            className={clsxm('px-2 py-1 text-gray-600', isElements && 'bg-white')}
+            onClick={onClickElements}
+          >
+            Element
+          </button>
+        )}
+        <button
+          className={clsxm('px-2 py-1 text-gray-600', isLayers && 'bg-white')}
+          onClick={onClickLayers}
+        >
+          Layers
+        </button>
       </div>
-
-      {(assertions.isCircle(selected) || assertions.isRect(selected)) && (
-        <div className='flex justify-between px-2'>
-          <div className='flex gap-2 p-1'>
-            <InputNumber
-              addonBefore='X'
-              value={selected.pos.x}
-              type='number'
-              size='small'
-              onChange={(val) => val && elementOperations.onChangeX(val.toString())}
-              changeOnWheel
-              stringMode
-            />
-          </div>
-          <div className='flex items-center gap-2 p-1'>
-            <InputNumber
-              addonBefore='Y'
-              value={selected.pos.y}
-              type='number'
-              size='small'
-              onChange={(val) => val && elementOperations.onChangeY(val.toString())}
-              changeOnWheel
-              stringMode
-            />
-          </div>
-        </div>
-      )}
-
-      {assertions.isCircle(selected) && (
-        <div className='flex justify-between p-1 px-3'>
-          <InputNumber
-            addonBefore='R'
-            value={selected.radius}
-            type='number'
-            size='small'
-            onChange={(val) => val && elementOperations.onChangeRadius(val.toString())}
-            changeOnWheel
-            stringMode
-            min={0}
-            className='w-full'
-          />
-        </div>
-      )}
-
-      {assertions.isRect(selected) && (
-        <div className='flex justify-between px-2'>
-          <div className='flex items-center gap-2 p-1'>
-            <InputNumber
-              addonBefore='W'
-              value={selected.width}
-              type='number'
-              size='small'
-              onChange={(val) => val && elementOperations.onChangeWidth(val.toString())}
-              changeOnWheel
-              stringMode
-              min={0}
-            />
-          </div>
-          <div className='flex items-center gap-2 p-1'>
-            <InputNumber
-              addonBefore='H'
-              value={selected.height}
-              type='number'
-              size='small'
-              onChange={(val) => val && elementOperations.onChangeHeight(val.toString())}
-              changeOnWheel
-              stringMode
-              min={0}
-            />
-          </div>
-        </div>
-      )}
-
-      <div className='flex justify-between px-2'>
-        <div className='flex items-center gap-2 p-1'>
-          <InputNumber
-            addonBefore={
-              <div className='h-4 w-4'>
-                <img
-                  src='/strokewidthicon.svg'
-                  alt='stroke width icon'
-                  className='h-full'
-                />
-              </div>
-            }
-            value={selected.stroke_width}
-            type='number'
-            size='small'
-            onChange={(val) => val && elementOperations.onChangeStrokeWidth(val.toString())}
-            changeOnWheel
-            stringMode
-            min={0}
-          />
-        </div>
-        <div className='flex items-center gap-2 p-1'>
-          <InputNumber
-            addonBefore={
-              <div className='h-4 w-4'>
-                <img
-                  src='/opacity.svg'
-                  alt='opacity icon'
-                  className='h-full'
-                />
-              </div>
-            }
-            value={selected.opacity}
-            type='number'
-            size='small'
-            onChange={(val) => val && elementOperations.onChangeOpacity(val.toString())}
-            changeOnWheel
-            stringMode
-            step={0.01}
-            min={0}
-            max={1}
-          />
-        </div>
-      </div>
-      <div className='flex flex-col gap-3 p-1 px-3'>
-        <ColorPicker
-          showText={(color) => <span>Fill: {color.toHexString()}</span>}
-          value={`rgba(${fillRed}, ${fillGreen}, ${fillBlue}, ${fillOpacity})`}
-          onChange={(c) => {
-            elementOperations.onChangeFill(c.toRgb())
-          }}
+      {isElements && selected && (
+        <ElementInfo
+          client={client}
+          selected={selected}
+          setSelected={setSelected}
+          onClickDelete={onClickDelete}
+          setRenderPropbar={setRenderPropbar}
         />
-        <ColorPicker
-          showText={(color) => <span>Stroke: {color.toHexString()}</span>}
-          value={`rgba(${strokeRed}, ${strokeGreen}, ${strokeBlue}, ${strokeOpacity})`}
-          onChange={(c) => {
-            elementOperations.onChangeStroke(c.toRgb())
-          }}
-        />
-      </div>
-      {/* {assertions.isPath(selected) && (
-        <div className='p-1'>
-          <div className='grid grid-cols-9 items-center gap-2 text-center text-lg'>
-            <p className='col-span-2'>Command</p>
-            <p>X</p>
-            <p>Y</p>
-            <p>H1 X</p>
-            <p>H1 Y</p>
-            <p>H2 X</p>
-            <p>H2 Y</p>
-            <p />
-
-            {selected.points.map((p) => (
-              <ConfigurationPathCommandRow
-                key={p.id}
-                pathId={selected.id}
-                data={p}
-                client={client}
-              />
-            ))}
-          </div>
-
-          <Button
-            className='mt-2'
-            text='Add Path'
-            onClick={elementOperations.onClickAddPathCommand}
-          />
-        </div>
-      )} */}
+      )}
+      {isLayers && <LayersInfo crdtClient={client} />}
     </section>
   )
 }

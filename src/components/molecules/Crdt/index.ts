@@ -44,6 +44,9 @@ class CrdtClient {
   peerGroupClient: PeerGroupClient
   changeListener: () => void
   remoteChangeListener: () => void
+
+  // only for subscribers that are not the crdt client itself.
+  mutateSubscribers: Map<number, () => void>
   render: () => void
   groupId: string
   logic: string | null
@@ -51,12 +54,15 @@ class CrdtClient {
   constructor(logic: string | null) {
     this.logic = logic
     this.svgDoc = this.createSVGDoc(getClientId(), this.logic)
+    this.mutateSubscribers = new Map()
     this.changeListener = () => {
       this.onChange()
+      this.notifyMutateSubscribers()
     }
 
     this.remoteChangeListener = () => {
       this.onChange(true)
+      this.notifyMutateSubscribers()
     }
 
     this.render = () => {}
@@ -102,7 +108,25 @@ class CrdtClient {
     })
   }
 
-  onChange(noBroadcast?: boolean) {
+  private notifyMutateSubscribers() {
+    for (const [_id, callback] of this.mutateSubscribers) {
+      callback()
+    }
+  }
+
+  addMutateSubsriber(callback: () => void): number {
+    const subscriberId = Math.floor(Math.random() * 1_000_000)
+    this.mutateSubscribers.set(subscriberId, callback)
+    return subscriberId
+  }
+
+  removeMutateSubscriber(subscriberId: number) {
+    if (this.mutateSubscribers.has(subscriberId)) {
+      this.mutateSubscribers.delete(subscriberId)
+    }
+  }
+
+  private onChange(noBroadcast?: boolean) {
     const crdtData = this.svgDoc.save()
     if (crdtData) {
       saveCrdtData(crdtData)
@@ -123,6 +147,7 @@ class CrdtClient {
       if (renderToolbar) {
         renderToolbar()
       }
+      this.notifyMutateSubscribers()
     }
 
     this.remoteChangeListener = () => {
@@ -132,6 +157,7 @@ class CrdtClient {
       if (renderToolbar) {
         renderToolbar()
       }
+      this.notifyMutateSubscribers()
     }
   }
 
@@ -204,8 +230,15 @@ class CrdtClient {
     this.changeListener()
   }
 
-  //   move_object_to_group(object_id: string, group_id: string, index: number): void;
-  //   move_object_to_root(object_id: string, index: number): void;
+  moveObject(group_id: string | null, object_id: string, index: number) {
+    if (group_id) {
+      this.svgDoc.move_object_to_group(object_id, group_id, index)
+    } else {
+      this.svgDoc.move_object_to_root(object_id, index)
+    }
+    this.changeListener()
+  }
+
   removeObject(object_id: string): void {
     this.svgDoc.remove_object(object_id)
     this.changeListener()

@@ -1,4 +1,4 @@
-import { FC, forwardRef, ReactNode, useState } from 'react'
+import { FC, forwardRef, useState } from 'react'
 
 import IcAdd from '@/assets/icons/ic-add.svg?react'
 import IcCircle from '@/assets/icons/ic-circle.svg?react'
@@ -9,22 +9,25 @@ import IcResize from '@/assets/icons/ic-resize.svg?react'
 import clsxm from '@/utils/clsxm'
 
 interface ToolbarButton {
-  content: ReactNode
+  Content: FC<{ color?: string }>
   active?: boolean
   onClick?: () => void
 }
 
-const ToolbarButton = forwardRef<HTMLDivElement, ToolbarButton>(({ content, active, onClick }, ref) => {
+const ToolbarButton = forwardRef<HTMLDivElement, ToolbarButton>(({ Content, active, onClick }, ref) => {
+  const [hover, setHover] = useState(false)
   return (
     <div
       ref={ref}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       className={clsxm(
-        'relative flex aspect-square w-full items-center justify-center rounded-md text-black transition-all duration-300 ease-in-out *:h-6 *:w-6 hover:cursor-pointer hover:bg-inktor-cyan',
-        active && 'bg-inktor-cyan'
+        'relative flex aspect-square w-full items-center justify-center rounded-md text-black *:h-6 *:w-6 hover:cursor-pointer hover:bg-[#1f1f1f]',
+        active && 'bg-[#1f1f1f]'
       )}
       onClick={onClick}
     >
-      {content}
+      <Content color={active || hover ? 'white' : 'black'} />
     </div>
   )
 })
@@ -45,17 +48,17 @@ const AddOptions: FC<AddOptions> = ({ visible = false, setAddCircle, setAddRect,
       )}
     >
       <ToolbarButton
-        content={<IcCircle />}
+        Content={IcCircle}
         onClick={setAddCircle}
       />
 
       <ToolbarButton
-        content={<IcRect />}
+        Content={IcRect}
         onClick={setAddRect}
       />
 
       <ToolbarButton
-        content={<IcPath />}
+        Content={IcPath}
         onClick={setAddPath}
       />
     </div>
@@ -87,7 +90,7 @@ const Toolbar: FC<Toolbar> = ({
     <>
       <div className='absolute left-3 top-1/3 flex h-auto w-12 flex-col gap-2 rounded-md bg-white p-2 shadow-toolbar'>
         <ToolbarButton
-          content={<IcAdd />}
+          Content={IcAdd}
           onClick={onClickAdd}
         />
 
@@ -99,7 +102,7 @@ const Toolbar: FC<Toolbar> = ({
         />
 
         <ToolbarButton
-          content={<IcPointer />}
+          Content={IcPointer}
           onClick={() => {
             setActive('pointer')
             setNormalMode()
@@ -108,7 +111,7 @@ const Toolbar: FC<Toolbar> = ({
         />
 
         <ToolbarButton
-          content={<IcResize />}
+          Content={IcResize}
           onClick={() => {
             setActive('resize')
             setResizeMode()
