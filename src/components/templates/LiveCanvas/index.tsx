@@ -16,6 +16,7 @@ import useRenderingEngine from '@/hooks/useRenderingEngine'
 const LiveCanvas = () => {
   const [showAddOptions, setShowAddOption] = useState(false)
   const [logic, setLogic] = useLocalStorage('logic', 'WASM')
+  const enableIndicator = false
 
   const {
     draw,
@@ -79,7 +80,7 @@ const LiveCanvas = () => {
 
   return (
     <main>
-      <Indicator logic={logic} />
+      {enableIndicator && <Indicator logic={logic} />}
 
       <Toolbar
         setNormalMode={setNormalMode}
