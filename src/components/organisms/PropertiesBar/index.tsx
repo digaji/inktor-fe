@@ -47,8 +47,6 @@ const PropertiesBar: FC<PropertiesBar> = ({ client, selected, setSelected, onCli
   const fillPicker = useColorPicker()
   const strokePicker = useColorPicker()
 
-  console.log('Re render')
-
   return (
     <section
       className={clsxm(

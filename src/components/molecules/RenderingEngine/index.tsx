@@ -116,6 +116,17 @@ class RenderingEngine {
     this.crdtClient.addRectangle(undefined, { pos: { x: 0, y: 0 }, height: 100, width: 150 })
   }
 
+  iterateObjectsReverse(cb: (object: Circle | Rectangle | Path) => boolean | void): boolean {
+    for (let i = this.objects.length - 1; i >= 0; i--) {
+      const object = this.objects[i]
+      const res = cb(object)
+      if (res) {
+        return true
+      }
+    }
+    return false
+  }
+
   setAddPath() {
     this.crdtClient.addPath(undefined, {
       points: [
@@ -155,7 +166,7 @@ class RenderingEngine {
 
     this.selected = undefined
 
-    this.objects.forEach((object) => {
+    this.iterateObjectsReverse((object) => {
       if (!(object.canDrag(mousePos) || object.canResize(mousePos))) return
 
       object.onMouseDown(mousePos)
@@ -184,10 +195,11 @@ class RenderingEngine {
     this.currentMousePos = ctx.pos.copy()
     const mousePos = this.screenToCanvas(ctx.pos)
 
-    for (const object of this.objects) {
+    const returnEarly = this.iterateObjectsReverse((object) => {
       const moving = object.onMouseMove(mousePos)
-      if (moving) return
-    }
+      if (moving) return true
+    })
+    if (returnEarly) return
 
     if (this.mouseDown) {
       const mouseDiff = ctx.pos.sub(this.lastMousePos)
@@ -200,9 +212,9 @@ class RenderingEngine {
     this.currentDraggingId = null
     this.currentResizingId = null
 
-    for (const object of this.objects) {
+    this.iterateObjectsReverse((object) => {
       object.onMouseUp()
-    }
+    })
   }
 
   setNormalMode() {
@@ -412,9 +424,7 @@ class RenderingEngine {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
     this.renderGrid(this.grid, ctx)
 
-    for (let i = 0; i < this.objects.length; i++) {
-      const object = this.objects[i]
-
+    this.iterateObjectsReverse((object) => {
       if (object instanceof Circle) {
         this.renderCircle(object, ctx)
       } else if (object instanceof Rectangle) {
@@ -422,7 +432,7 @@ class RenderingEngine {
       } else if (object instanceof Path) {
         this.renderPath(object, ctx)
       }
-    }
+    })
   }
 }
 

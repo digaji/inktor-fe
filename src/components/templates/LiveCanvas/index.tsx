@@ -92,7 +92,7 @@ const LiveCanvas = () => {
       />
 
       <Settings
-        propBarVisible={!!element}
+        propBarVisible={true}
         logic={logic}
         setLogic={setLogic}
         client={client}

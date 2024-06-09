@@ -2,11 +2,13 @@ import { SVGDoc as SVGDocJs } from '@inktor/inktor-crdt-js'
 import {
   Color,
   PartialSVGCircle,
+  PartialSVGGroup,
   PartialSVGPath,
   PartialSVGRectangle,
   SVGCircle,
   SVGDoc as SVGDocRs,
   SVGDocTree,
+  SVGGroup,
   SVGPath,
   SVGPathCommand,
   SVGPathCommandType,
@@ -239,6 +241,15 @@ class CrdtClient {
     this.changeListener()
   }
 
+  addGroup(group_id: string | null, partial_group: PartialSVGGroup) {
+    if (group_id === null) {
+      this.svgDoc.add_group(undefined, partial_group)
+    } else {
+      this.svgDoc.add_group(group_id, partial_group)
+    }
+    this.changeListener()
+  }
+
   removeObject(object_id: string): void {
     this.svgDoc.remove_object(object_id)
     this.changeListener()
@@ -257,6 +268,48 @@ class CrdtClient {
   children(): SVGDocTree {
     return this.svgDoc.children()
   }
+}
+
+const convertUtilityAux = (group: SVGGroup, crdtClient: CrdtClient, engineContext: EngineContext) => {
+  const objects = group.children.flatMap((it): (Circle | Rectangle | Path)[] => {
+    if (it.type === 'CIRCLE')
+      return [
+        new Circle(
+          it.id,
+          it.pos.x,
+          it.pos.y,
+          it.radius,
+          it.stroke_width,
+          it.opacity,
+          it.fill,
+          it.stroke,
+          engineContext,
+          crdtClient
+        ),
+      ]
+
+    if (it.type === 'RECTANGLE')
+      return [
+        new Rectangle(
+          it.id,
+          it.pos.x,
+          it.pos.y,
+          it.height,
+          it.width,
+          it.stroke_width,
+          it.opacity,
+          it.fill,
+          it.stroke,
+          engineContext,
+          crdtClient
+        ),
+      ]
+    if (it.type === 'PATH')
+      return [new Path(it.id, it.points, it.stroke_width, it.opacity, it.fill, it.stroke, engineContext, crdtClient)]
+    if (it.type === 'GROUP') return convertUtilityAux(it, crdtClient, engineContext)
+    return []
+  })
+  return objects
 }
 
 export const convertUtility = (tree: SVGDocTree, crdtClient: CrdtClient, engineContext: EngineContext) => {
@@ -296,6 +349,7 @@ export const convertUtility = (tree: SVGDocTree, crdtClient: CrdtClient, engineC
 
     if (it.type === 'PATH')
       return [new Path(it.id, it.points, it.stroke_width, it.opacity, it.fill, it.stroke, engineContext, crdtClient)]
+    if (it.type === 'GROUP') return convertUtilityAux(it, crdtClient, engineContext)
     return []
   })
   return objects
